@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    typedRoutes: true
-  }
+  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : ".next",
+  typedRoutes: true
 };
 
 export default nextConfig;

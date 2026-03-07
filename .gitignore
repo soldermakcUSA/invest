@@ -1,8 +1,9 @@
 .next
+.next-dev
 node_modules
 .env.local
 .env
-coverage
 dist
-*.log
+npm-debug.log*
+*.tsbuildinfo
 .DS_Store
