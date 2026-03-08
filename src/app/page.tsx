@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AuthModalProvider, AuthModalTrigger } from "@/components/auth-modal";
 import { LandingEffects } from "@/components/landing-effects";
 import { OrbitalBrand } from "@/components/orbital-brand";
 
@@ -78,38 +79,49 @@ const showcasePanels: ShowcasePanel[] = [
   }
 ];
 
-export default function HomePage() {
+type HomePageProps = {
+  searchParams?: Promise<{
+    auth?: string;
+    next?: string;
+  }>;
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = (await searchParams) ?? {};
   const currentYear = new Date().getFullYear();
+  const initialMode = params.auth === "signup" || params.auth === "login" ? params.auth : undefined;
+  const initialNextRoute = typeof params.next === "string" ? params.next : "/dashboard";
 
   return (
-    <main className="portal-page portal-page--reference">
-      <LandingEffects />
+    <AuthModalProvider initialMode={initialMode} initialNextRoute={initialNextRoute}>
+      <main className="portal-page portal-page--reference">
+        <LandingEffects />
 
-      <header className="reference-header">
-        <Link href="/" className="brand-link" aria-label="AlphaForge home">
-          <OrbitalBrand compact />
-        </Link>
-
-        <nav className="reference-nav" aria-label="Primary">
-          <a href="#capabilities">AI & Quant</a>
-          <a href="#platform">Platforms</a>
-          <a href="#security">Security</a>
-          <a href="#about">About</a>
-          <a href="/dashboard">Dashboard</a>
-        </nav>
-
-        <div className="reference-actions">
-          <Link className="button button--ghost" href="/login">
-            Sign In
+        <header className="reference-header">
+          <Link href="/" className="brand-link" aria-label="AlphaForge home">
+            <OrbitalBrand compact />
           </Link>
-          <Link className="button button--primary" href="/dashboard">
-            Get Started
-          </Link>
-        </div>
-      </header>
 
-      <section className="reference-stage">
-        <section className="reference-hero reveal delay-1">
+          <nav className="reference-nav" aria-label="Primary">
+            <a href="#capabilities">AI & Quant</a>
+            <a href="#platform">Platforms</a>
+            <a href="#security">Security</a>
+            <a href="#about">About</a>
+            <a href="/dashboard">Dashboard</a>
+          </nav>
+
+          <div className="reference-actions">
+            <AuthModalTrigger className="button button--ghost" mode="login" nextRoute="/dashboard">
+              Sign In
+            </AuthModalTrigger>
+            <AuthModalTrigger className="button button--primary" mode="signup" nextRoute="/dashboard">
+              Get Started
+            </AuthModalTrigger>
+          </div>
+        </header>
+
+        <section className="reference-stage">
+          <section className="reference-hero reveal delay-1">
           <div className="reference-hero__atmosphere">
             <div className="reference-hero__lines reference-hero__lines--left" />
             <div className="reference-hero__lines reference-hero__lines--right" />
@@ -128,16 +140,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="reference-hero__copy">
-            <h1>Unleash the power of intelligent investing</h1>
-            <p>Secure data. Systematic edge. Verified opportunities.</p>
-            <div className="reference-hero__actions">
-              <Link className="button button--primary button--wide button--shimmer" href="/login">
-                Get Started Now
-              </Link>
+            <div className="reference-hero__copy">
+              <h1>Unleash the power of intelligent investing</h1>
+              <p>Secure data. Systematic edge. Verified opportunities.</p>
+              <div className="reference-hero__actions">
+                <AuthModalTrigger className="button button--primary button--wide button--shimmer" mode="signup">
+                  Get Started Now
+                </AuthModalTrigger>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
         <section className="reference-center-block reveal delay-2" id="capabilities">
           <div className="center-heading">
@@ -323,45 +335,46 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-      </section>
+        </section>
 
-      <footer className="site-footer reference-footer reveal delay-2">
-        <div className="reference-footer__brand">
-          <Link href="/" className="brand-link" aria-label="AlphaForge home">
-            <OrbitalBrand compact />
-          </Link>
-          <p>
-            AlphaForge unifies AI research, quant modeling and investment diligence into one premium intelligence
-            environment.
-          </p>
-        </div>
-
-        <div className="reference-footer__nav">
-          <span className="about-label">Explore</span>
-          <div className="footer-links">
-            <a href="#capabilities">AI & Quant</a>
-            <a href="#platform">Platform</a>
-            <a href="#security">Security</a>
-            <a href="#about">About</a>
-            <a href="#presence">Presence</a>
+        <footer className="site-footer reference-footer reveal delay-2">
+          <div className="reference-footer__brand">
+            <Link href="/" className="brand-link" aria-label="AlphaForge home">
+              <OrbitalBrand compact />
+            </Link>
+            <p>
+              AlphaForge unifies AI research, quant modeling and investment diligence into one premium intelligence
+              environment.
+            </p>
           </div>
-        </div>
 
-        <div className="reference-footer__meta">
-          <span className="about-label">Status</span>
-          <div className="reference-footer__signals">
-            <div>
-              <strong>24/7</strong>
-              <span>monitoring</span>
-            </div>
-            <div>
-              <strong>Private</strong>
-              <span>client access</span>
+          <div className="reference-footer__nav">
+            <span className="about-label">Explore</span>
+            <div className="footer-links">
+              <a href="#capabilities">AI & Quant</a>
+              <a href="#platform">Platform</a>
+              <a href="#security">Security</a>
+              <a href="#about">About</a>
+              <a href="#presence">Presence</a>
             </div>
           </div>
-          <p className="footer-meta">© {currentYear} AlphaForge. Investment Intelligence.</p>
-        </div>
-      </footer>
-    </main>
+
+          <div className="reference-footer__meta">
+            <span className="about-label">Status</span>
+            <div className="reference-footer__signals">
+              <div>
+                <strong>24/7</strong>
+                <span>monitoring</span>
+              </div>
+              <div>
+                <strong>Private</strong>
+                <span>client access</span>
+              </div>
+            </div>
+            <p className="footer-meta">© {currentYear} AlphaForge. Investment Intelligence.</p>
+          </div>
+        </footer>
+      </main>
+    </AuthModalProvider>
   );
 }

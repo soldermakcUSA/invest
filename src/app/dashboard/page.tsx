@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
+import { AuthGate } from "@/components/auth-gate";
+import { DashboardSessionControls } from "@/components/dashboard-session-controls";
 import { OrbitalBrand } from "@/components/orbital-brand";
 
 type NavItem = {
@@ -125,52 +127,47 @@ export default function DashboardPage() {
     .join(", ")})`;
 
   return (
-    <main className="dashboard-page">
-      <aside className="dashboard-sidebar">
-        <Link className="brand-link brand-link--sidebar" href="/">
-          <OrbitalBrand compact />
-        </Link>
-
-        <nav className="dashboard-nav" aria-label="Dashboard">
-          {navItems.map(({ label, icon: Icon }, index) => (
-            <a className={`dashboard-nav__item ${index === 0 ? "is-active" : ""}`} href="#" key={label}>
-              <Icon size={18} />
-              <span>{label}</span>
-            </a>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer">
-          <div className="status-chip">
-            <span />
-            API status: online
-          </div>
-          <Link className="button button--ghost button--wide" href="/login">
-            Sign in
+    <AuthGate>
+      <main className="dashboard-page">
+        <aside className="dashboard-sidebar">
+          <Link className="brand-link brand-link--sidebar" href="/">
+            <OrbitalBrand compact />
           </Link>
-        </div>
-      </aside>
 
-      <section className="dashboard-main">
-        <header className="dashboard-topbar">
-          <div className="dashboard-topbar__brand">
-            <OrbitalBrand />
+          <nav className="dashboard-nav" aria-label="Dashboard">
+            {navItems.map(({ label, icon: Icon }, index) => (
+              <a className={`dashboard-nav__item ${index === 0 ? "is-active" : ""}`} href="#" key={label}>
+                <Icon size={18} />
+                <span>{label}</span>
+              </a>
+            ))}
+          </nav>
+
+          <div className="sidebar-footer">
+            <DashboardSessionControls />
           </div>
+        </aside>
 
-          <div className="dashboard-topbar__actions">
-            <label className="search-shell">
-              <Search size={16} />
-              <input placeholder="Search projects, tickers, sectors" type="search" />
-            </label>
-            <button className="icon-button" type="button" aria-label="Notifications">
-              <Bell size={18} />
-              <span>3</span>
-            </button>
-            <div className="avatar-chip">
-              <Image alt="Team member" height={48} src="/brand/team.jpeg" width={48} />
+        <section className="dashboard-main">
+          <header className="dashboard-topbar">
+            <div className="dashboard-topbar__brand">
+              <OrbitalBrand />
             </div>
-          </div>
-        </header>
+
+            <div className="dashboard-topbar__actions">
+              <label className="search-shell">
+                <Search size={16} />
+                <input placeholder="Search projects, tickers, sectors" type="search" />
+              </label>
+              <button className="icon-button" type="button" aria-label="Notifications">
+                <Bell size={18} />
+                <span>3</span>
+              </button>
+              <div className="avatar-chip">
+                <Image alt="Team member" height={48} src="/brand/team.jpeg" width={48} />
+              </div>
+            </div>
+          </header>
 
         <div className="dashboard-hero">
           <div>
@@ -466,7 +463,8 @@ export default function DashboardPage() {
             Live operating room
           </div>
         </section>
-      </section>
-    </main>
+        </section>
+      </main>
+    </AuthGate>
   );
 }
