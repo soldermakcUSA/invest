@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import "./dashboard.css";
+import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
 import {
@@ -128,12 +129,8 @@ export default function DashboardPage() {
   return (
     <div className="scr-app">
       <aside className="scr-sidebar">
-        <Link className="scr-logo-top" href="/">
-          <div className="scr-logo-icon">AF</div>
-          <div className="scr-logo-text">
-            <h1>ALPHA FORGE</h1>
-            <span>INVESTMENT INTELLIGENCE</span>
-          </div>
+        <Link className="brand-link brand-link--sidebar scr-logo-top" href="/">
+          <OrbitalBrand compact />
         </Link>
         <nav className="scr-nav">
           {navItems.map((item) => (
@@ -152,11 +149,9 @@ export default function DashboardPage() {
       <div className="scr-main">
         <header className="scr-topbar">
           <div className="scr-top-center">
-            <div className="scr-top-logo-icon"></div>
-            <div className="scr-logo-text center-logo">
-              <h1>ALPHA FORGE</h1>
-              <span>INVESTMENT INTELLIGENCE</span>
-            </div>
+            <Link className="brand-link" href="/">
+              <OrbitalBrand />
+            </Link>
           </div>
           <div className="scr-top-right">
             <div className="scr-search">
