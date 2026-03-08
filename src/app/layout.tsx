@@ -1,11 +1,28 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "AlphaForge Portal",
   description:
-    "Premium investment intelligence portal built with Next.js and Firebase Auth for AI research, portfolio oversight and venture screening."
+    "Premium investment intelligence portal built with Next.js and Firebase Auth for AI research, portfolio oversight and venture screening.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AlphaForge"
+  },
+  formatDetection: {
+    telephone: false
+  },
+  manifest: "/manifest.webmanifest"
+};
+
+export const viewport: Viewport = {
+  themeColor: "#06101b",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
 };
 
 export default function RootLayout({

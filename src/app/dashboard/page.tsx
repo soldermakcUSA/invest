@@ -1,5 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import "./dashboard.css";
+import { useState, useEffect } from "react";
+import { fetchGemini } from "@/lib/gemini";
 import {
   Bell,
   Bot,
@@ -11,101 +16,56 @@ import {
   Search,
   Settings,
   ShieldCheck,
+  ShieldAlert,
   Sparkles,
-  Wallet
+  Wallet,
+  Loader2,
+  Send,
+  AlertTriangle,
+  TrendingUp,
+  Activity,
+  ArrowDownRight,
+  Moon,
+  Sun,
+  LogOut,
+  BrainCircuit,
+  BarChart3,
+  Rocket,
+  MoreHorizontal,
+  LayoutGrid
 } from "lucide-react";
-import type { CSSProperties } from "react";
-import type { LucideIcon } from "lucide-react";
-import { AuthGate } from "@/components/auth-gate";
-import { DashboardSessionControls } from "@/components/dashboard-session-controls";
-import { OrbitalBrand } from "@/components/orbital-brand";
+import {
+  PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area, Bar, ComposedChart, Legend
+} from "recharts";
 
-type NavItem = {
-  label: string;
-  icon: LucideIcon;
-};
-
-type AllocationItem = {
-  label: string;
-  value: number;
-  color: string;
-};
-
-const navItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard },
+const navItems = [
+  { label: "Dashboard", icon: LayoutGrid },
   { label: "Portfolio View", icon: Wallet },
-  { label: "AI Tools", icon: Bot },
-  { label: "Quant Analysis", icon: ChartColumnIncreasing },
-  { label: "Ventures", icon: Radar },
+  { label: "AI Tools", icon: BrainCircuit },
+  { label: "Quant Analysis", icon: BarChart3 },
+  { label: "Ventures", icon: Rocket },
   { label: "Scam Check", icon: ShieldCheck },
   { label: "Settings", icon: Settings }
 ];
 
-const allocation: AllocationItem[] = [
-  { label: "Technology", value: 35, color: "#e6c15d" },
-  { label: "Crypto", value: 25, color: "#c4973f" },
-  { label: "Commodities", value: 15, color: "#8f6b2d" },
-  { label: "Ventures", value: 15, color: "#5b441f" },
-  { label: "Cash", value: 10, color: "#f2dd9f" }
+const allocation = [
+  { label: "Technology", value: 35, color: "#d2b45e" },
+  { label: "Crypto", value: 25, color: "#9ca3af" },
+  { label: "Commodities", value: 15, color: "#b5842e" },
+  { label: "Bits", value: 15, color: "#6b7280" },
+  { label: "Cryptic", value: 15, color: "#71717a" },
+  { label: "Compuities", value: 15, color: "#52525b" },
+  { label: "Others", value: 10, color: "#3f3f46" }
 ];
 
-const signalItems = [
-  {
-    title: "Liquidity expansion on majors",
-    detail: "Momentum models increased conviction across BTC, SOL and exchange infrastructure.",
-    age: "19m ago"
-  },
-  {
-    title: "Venture sentiment widening",
-    detail: "Seed software dealflow improved while valuation discipline remained intact.",
-    age: "1h ago"
-  },
-  {
-    title: "Scam exposure falling",
-    detail: "Protocol screening reduced high-risk candidates in the current pipeline.",
-    age: "2h ago"
-  }
-];
-
-const ventures = [
-  {
-    title: "AI Infrastructure",
-    stage: "Seed / Series A",
-    score: "89/100"
-  },
-  {
-    title: "Web3 Analytics",
-    stage: "Token + equity exposure",
-    score: "76/100"
-  },
-  {
-    title: "Fintech API",
-    stage: "Revenue traction",
-    score: "84/100"
-  },
-  {
-    title: "Defense / Deep Tech",
-    stage: "High upside",
-    score: "91/100"
-  }
-];
-
-const watchlist = [
-  { ticker: "AVDX", price: "$9.30", spark: [18, 23, 22, 29, 35, 33, 41], change: "+13.38%", target: "+3.29%" },
-  { ticker: "ALDM", price: "$2.70", spark: [11, 14, 13, 17, 16, 21, 24], change: "+7.29%", target: "+2.53%" },
-  { ticker: "CRYPO", price: "$13.70", spark: [21, 22, 24, 23, 27, 29, 34], change: "+3.36%", target: "+5.98%" },
-  { ticker: "BR6C", price: "$3.50", spark: [13, 18, 17, 16, 18, 23, 26], change: "+1.35%", target: "+9.60%" },
-  { ticker: "F3RN", price: "$3.00", spark: [12, 13, 11, 15, 18, 17, 20], change: "+3.38%", target: "+4.89%" }
-];
-
-const candleSeries = [42, 60, 51, 78, 64, 55, 82, 71, 88, 76, 92, 96];
-const comparisonA = [18, 46, 63, 72, 81, 91];
-const comparisonB = [11, 34, 54, 60, 71, 82];
+const candleSeries = [42, 60, 51, 78, 64, 55, 82, 71, 88, 76, 92, 96, 85, 90, 80, 75, 85, 95];
+const comparisonA = [18, 46, 63, 72, 81, 91, 100];
+const comparisonB = [11, 34, 54, 60, 71, 82, 90];
 
 function buildPolyline(values: number[], width: number, height: number) {
   const step = width / (values.length - 1);
   return values
-    .map((value, index) => {
+    .map((value: number, index: number) => {
       const x = index * step;
       const y = height - (value / 100) * height;
       return `${x},${y}`;
@@ -114,357 +74,386 @@ function buildPolyline(values: number[], width: number, height: number) {
 }
 
 function buildSpark(values: number[]) {
-  return buildPolyline(values.map((value) => value * 3), 120, 36);
+  return buildPolyline(values.map((value: number) => value * 2.5), 60, 20);
 }
 
 export default function DashboardPage() {
-  const allocationGradient = `conic-gradient(${allocation
-    .map((item, index) => {
-      const start = allocation.slice(0, index).reduce((sum, current) => sum + current.value, 0);
-      const end = start + item.value;
-      return `${item.color} ${start}% ${end}%`;
-    })
-    .join(", ")})`;
+  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [theme, setTheme] = useState("dark");
+  const [apiKey, setApiKey] = useState("");
+  const [analystInput, setAnalystInput] = useState("");
+  const [analystOutput, setAnalystOutput] = useState("Awaiting your market query...");
+  const [isAnalystLoading, setIsAnalystLoading] = useState(false);
+  const [auditInput, setAuditInput] = useState("");
+  const [auditOutput, setAuditOutput] = useState<string | null>(null);
+  const [isAuditLoading, setIsAuditLoading] = useState(false);
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('theme-light');
+    } else {
+      document.body.classList.remove('theme-light');
+    }
+  }, [theme]);
+
+  const handleAnalystRequest = async () => {
+    if (!analystInput.trim()) return;
+    setIsAnalystLoading(true);
+    setAnalystOutput("");
+    const systemPrompt = "You are the Alpha Forge Intelligence Analyst. Provide a concise, professional investment outlook in English (max 3 sentences).";
+    try {
+      const result = await fetchGemini(analystInput, systemPrompt);
+      setAnalystOutput(result || "An error occurred");
+    } catch (err) {
+      setAnalystOutput("Analyst temporarily unavailable. Check API status.");
+    } finally {
+      setIsAnalystLoading(false);
+    }
+  };
+
+  const handleAuditRequest = async () => {
+    if (!auditInput.trim()) return;
+    setIsAuditLoading(true);
+    const systemPrompt = "You are the Alpha Forge Scam Detector. Analyze the following project description for red flags. Provide a short text summary in English with: Risk Level (Critical/High/Low), Primary Red Flag, and a Recommendation. Keep it brief and structured.";
+    try {
+      const result = await fetchGemini(`Audit this project: ${auditInput}`, systemPrompt);
+      setAuditOutput(result || "Audit system failure");
+    } catch (err) {
+      setAuditOutput("Audit system failure.");
+    } finally {
+      setIsAuditLoading(false);
+    }
+  };
 
   return (
-    <AuthGate>
-      <main className="dashboard-page">
-        <aside className="dashboard-sidebar">
-          <Link className="brand-link brand-link--sidebar" href="/">
-            <OrbitalBrand compact />
-          </Link>
-
-          <nav className="dashboard-nav" aria-label="Dashboard">
-            {navItems.map(({ label, icon: Icon }, index) => (
-              <a className={`dashboard-nav__item ${index === 0 ? "is-active" : ""}`} href="#" key={label}>
-                <Icon size={18} />
-                <span>{label}</span>
-              </a>
-            ))}
-          </nav>
-
-          <div className="sidebar-footer">
-            <DashboardSessionControls />
+    <div className="scr-app">
+      <aside className="scr-sidebar">
+        <Link className="scr-logo-top" href="/">
+          <div className="scr-logo-icon">AF</div>
+          <div className="scr-logo-text">
+            <h1>ALPHA FORGE</h1>
+            <span>INVESTMENT INTELLIGENCE</span>
           </div>
-        </aside>
+        </Link>
+        <nav className="scr-nav">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              className={`scr-nav-item ${activeTab === item.label ? "active" : ""}`}
+              onClick={() => setActiveTab(item.label)}
+            >
+              <item.icon size={18} />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-        <section className="dashboard-main">
-          <header className="dashboard-topbar">
-            <div className="dashboard-topbar__brand">
-              <OrbitalBrand />
-            </div>
-
-            <div className="dashboard-topbar__actions">
-              <label className="search-shell">
-                <Search size={16} />
-                <input placeholder="Search projects, tickers, sectors" type="search" />
-              </label>
-              <button className="icon-button" type="button" aria-label="Notifications">
-                <Bell size={18} />
-                <span>3</span>
-              </button>
-              <div className="avatar-chip">
-                <Image alt="Team member" height={48} src="/brand/team.jpeg" width={48} />
-              </div>
-            </div>
-          </header>
-
-        <div className="dashboard-hero">
-          <div>
-            <span className="eyebrow">Private workspace</span>
-            <h1>Portfolio intelligence, AI signals and venture diligence in one view.</h1>
-          </div>
-          <div className="dashboard-hero__meta">
-            <div>
-              <strong>June cycle</strong>
-              <span>Very bullish</span>
-            </div>
-            <div>
-              <strong>12 active</strong>
-              <span>research queues</span>
+      <div className="scr-main">
+        <header className="scr-topbar">
+          <div className="scr-top-center">
+            <div className="scr-top-logo-icon"></div>
+            <div className="scr-logo-text center-logo">
+              <h1>ALPHA FORGE</h1>
+              <span>INVESTMENT INTELLIGENCE</span>
             </div>
           </div>
-        </div>
-
-        <div className="dashboard-grid">
-          <article className="panel panel--portfolio">
-            <div className="panel__header">
-              <div>
-                <span>Portfolio overview</span>
-                <h2>Invest</h2>
-              </div>
-              <span className="panel-tag">Invest</span>
+          <div className="scr-top-right">
+            <div className="scr-search">
+              <Search size={14} color="rgba(255,255,255,0.4)" />
+              <input type="text" placeholder="Search..." />
             </div>
+            <button className="scr-bell">
+              <Bell size={18} />
+              <div className="scr-bell-dot">1</div>
+            </button>
+            <div className="scr-avatar">
+              <img src="/brand/team.jpeg" alt="User" />
+            </div>
+          </div>
+        </header>
 
-            <div className="portfolio-layout">
-              <div className="metric-stack">
-                <div className="metric-card">
-                  <span>Total value</span>
-                  <strong>$1,45,891.87</strong>
-                  <em>+$3,900 (+12.86%)</em>
+        <section className="scr-content">
+          {activeTab === "Dashboard" && (
+            <div className="scr-grid">
+
+              {/* PORTFOLIO OVERVIEW */}
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <TrendingUp size={16} /> <h2>PORTFOLIO OVERVIEW <span className="cat">(INVEST)</span></h2>
+                  </div>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">INVEST</span>
+                    <button><MoreHorizontal size={14} /></button>
+                  </div>
                 </div>
-                <div className="metric-card">
-                  <span>Daily change</span>
-                  <strong>+1,764</strong>
-                  <em>+1.19%</em>
+                <div className="scr-panel-body" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: '20px' }}>
+                      <p style={{ color: '#ccc', fontSize: '10px', textTransform: 'uppercase' }}>Total Value</p>
+                      <h3 style={{ fontSize: '28px', color: '#fff', margin: '4px 0' }}>$1,45,891.87</h3>
+                      <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ $3,900 (+12.86%)</p>
+                    </div>
+                    <div>
+                      <p style={{ color: '#ccc', fontSize: '10px', textTransform: 'uppercase' }}>Daily Change</p>
+                      <h3 style={{ fontSize: '20px', color: '#fff', margin: '4px 0' }}>+1,764 <span style={{ fontSize: '12px', color: '#ccc' }}>(1.19%)</span></h3>
+                      <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ +32.56%</p>
+                    </div>
+                  </div>
+                  <div style={{ width: '150px', height: '150px', position: 'relative' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={allocation.slice(0, 4)} innerRadius={40} outerRadius={65} dataKey="value" stroke="rgba(0,0,0,0.5)">
+                          {allocation.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyItems: 'center', pointerEvents: 'none', top: '50px', left: '60px' }}>
+                      <span style={{ fontSize: '16px', fontWeight: 'bold' }}>35%</span>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1, fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {allocation.map(a => (
+                      <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: a.color }} /> {a.label}</div>
+                        <span>{a.value}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="allocation-chart">
-                <div className="allocation-chart__ring" style={{ "--allocation-gradient": allocationGradient } as CSSProperties}>
-                  <span>35%</span>
+              {/* AI POWERED INSIGHTS */}
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <BrainCircuit size={16} /> <h2>AI POWERED INSIGHTS</h2>
+                  </div>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">AI</span>
+                    <button><MoreHorizontal size={14} /></button>
+                  </div>
                 </div>
-                <div className="allocation-legend">
-                  {allocation.map((item) => (
-                    <div key={item.label}>
-                      <span style={{ backgroundColor: item.color }} />
-                      <strong>{item.label}</strong>
-                      <em>{item.value}%</em>
+                <div className="scr-panel-body" style={{ display: 'flex', gap: '20px' }}>
+                  <div style={{ width: '180px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div className="scr-gauge-arc" style={{ width: '140px', height: '70px', borderTopLeftRadius: '70px', borderTopRightRadius: '70px', border: '16px solid rgba(255,255,255,0.1)', borderBottom: '0', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(90deg, #f87171, #facc15, #4ade80)', maskImage: 'radial-gradient(circle at bottom, transparent 45%, black 46%)' }} />
+                      <div style={{ position: 'absolute', bottom: '-4px', left: '50%', width: '4px', height: '40px', background: '#fff', transformOrigin: 'bottom center', transform: 'rotate(45deg)', borderRadius: '2px' }} />
+                    </div>
+                    <div style={{ color: '#4ade80', fontSize: '16px', fontWeight: 'bold', marginTop: '12px' }}>Very Bullish</div>
+                    <p style={{ fontSize: '10px', textAlign: 'center', color: '#aaa', marginTop: '6px' }}>Current market sentiment is highly optimistic.</p>
+                  </div>
+
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <input
+                        value={analystInput}
+                        onChange={(e) => setAnalystInput(e.target.value)}
+                        placeholder="Ask AI Analyst..."
+                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '4px', padding: '6px 12px', color: '#fff', fontSize: '11px', outline: 'none' }}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAnalystRequest()}
+                      />
+                      <button onClick={handleAnalystRequest} style={{ background: '#d2b45e', border: 'none', color: '#000', borderRadius: '4px', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
+                        {isAnalystLoading ? '...' : 'Ask'}
+                      </button>
+                    </div>
+                    <div style={{ background: 'rgba(210,180,94,0.05)', padding: '10px', borderRadius: '4px', fontSize: '11px', color: '#d2b45e', borderLeft: '2px solid #d2b45e', flex: 1, fontStyle: 'italic', overflowY: 'auto' }}>
+                      {analystOutput}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* QUANT LAB */}
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <BarChart3 size={16} /> <h2>QUANT LAB <span className="cat">(QUANT)</span></h2>
+                  </div>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">QUANT</span>
+                    <button><MoreHorizontal size={14} /></button>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'flex', gap: '20px' }}>
+                  <div style={{ flex: 1.2 }}>
+                    <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Candidate Chart</h3>
+                    <div style={{ height: '140px' }}>
+                      <svg viewBox="0 0 300 120" width="100%" height="100%" preserveAspectRatio="none">
+                        {candleSeries.map((v, i) => (
+                          <g key={i}>
+                            <line x1={i * 15 + 10} x2={i * 15 + 10} y1="10" y2="110" stroke="rgba(210,180,94,0.15)" strokeWidth="1" />
+                            <rect x={i * 15 + 7} y={120 - v} width="6" height={v * 0.8} fill="rgba(210,180,94,0.8)" rx="1" />
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#777', marginTop: '4px' }}>
+                      <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                    </div>
+                  </div>
+                  <div style={{ flex: 0.8 }}>
+                    <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Model Performance Comparison</h3>
+                    <div style={{ height: '90px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={comparisonA.map((v, i) => ({ name: i * 25, algo1: comparisonA[i], algo2: comparisonB[i] }))}>
+                          <XAxis dataKey="name" stroke="#555" fontSize={8} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#555" fontSize={8} tickLine={false} axisLine={false} width={20} />
+                          <Area type="monotone" dataKey="algo1" stroke="#d2b45e" fill="#d2b45e" fillOpacity={0.2} strokeWidth={2} />
+                          <Area type="monotone" dataKey="algo2" stroke="#fff" fill="none" strokeWidth={1} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '16px', color: '#ccc' }}>
+                      <div>
+                        <p>Algorithm Perf...</p>
+                        <p style={{ color: '#d2b45e', fontWeight: 'bold' }}>54.5%</p>
+                      </div>
+                      <div>
+                        <p>Algorithm 1</p>
+                        <p style={{ color: '#4ade80' }}>0.25%</p>
+                      </div>
+                      <div>
+                        <p>Algorithm 2</p>
+                        <p style={{ color: '#4ade80' }}>0.25%</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* RISK ALERTS */}
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <ShieldCheck size={16} /> <h2>RISK ALERTS <span className="cat">(SCAM DETECTOR)</span></h2>
+                  </div>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">SCAM PTOR</span>
+                    <button><MoreHorizontal size={14} /></button>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'flex', gap: '20px' }}>
+                  <div style={{ flex: 0.8 }}>
+                    <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Summary</h3>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                      <div className="scr-risk-box critical">
+                        <span>Critical</span>
+                        <strong>3</strong>
+                        <em>projects</em>
+                      </div>
+                      <div className="scr-risk-box high">
+                        <span>High risk</span>
+                        <strong>2</strong>
+                        <em>projects</em>
+                      </div>
+                      <div className="scr-risk-box low">
+                        <span>Low risk</span>
+                        <strong>1</strong>
+                        <em>projects</em>
+                      </div>
+                    </div>
+                    <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Project Stainers</h3>
+                    <div className="scr-risk-bars">
+                      <div className="scr-risk-bar"><span style={{ width: '80%', background: '#f87171' }}></span><div className="scr-risk-bar-text"><span>Critical</span><span>27/23</span></div></div>
+                      <div className="scr-risk-bar"><span style={{ width: '90%', background: '#eab308' }}></span><div className="scr-risk-bar-text"><span>High risk</span><span>58/55</span></div></div>
+                      <div className="scr-risk-bar"><span style={{ width: '15%', background: '#4ade80' }}></span><div className="scr-risk-bar-text"><span>Low risk</span><span>1/34</span></div></div>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1.2 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '11px', color: '#ccc' }}>Recent Scanned Projects</h3>
+                      <h3 style={{ fontSize: '11px', color: '#ccc' }}>Risk Rating</h3>
+                    </div>
+                    <div className="scr-list">
+                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* VENTURES */}
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <Rocket size={16} /> <h2>VENTURES</h2>
+                  </div>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">VENTURES</span>
+                    <button><MoreHorizontal size={14} /></button>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
+                  {[
+                    { t: 'New', d: 'Investments', p: 'New investment opportunities.', i: 'A' },
+                    { t: 'Crypto', d: 'Investments', p: 'Describe a shartroter of mwlorining.', i: 'B' },
+                    { t: 'Meta', d: 'Investments', p: 'Funding stage of aremodisen tech.', i: 'M' },
+                    { t: 'Ventures', d: 'Investments', p: 'New investment opportunities to amal.', i: 'V' },
+                  ].map(v => (
+                    <div key={v.t} className="scr-venture-card">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                        <div style={{ width: '28px', height: '28px', background: 'rgba(210,180,94,0.1)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d2b45e', fontWeight: 'bold', fontSize: '14px', border: '1px solid rgba(210,180,94,0.3)' }}>{v.i}</div>
+                        <div style={{ lineHeight: 1.1 }}>
+                          <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>{v.t}</div>
+                          <div style={{ fontSize: '10px', color: '#777' }}>{v.d}</div>
+                        </div>
+                      </div>
+                      <h4 style={{ fontSize: '11px', color: '#ccc', marginBottom: '4px' }}>Funding Stage</h4>
+                      <p style={{ fontSize: '9px', color: '#777', lineHeight: 1.4, marginBottom: '12px', flex: 1 }}>{v.p}</p>
+                      <button className="scr-btn-outline">Learn more</button>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </article>
 
-          <article className="panel">
-            <div className="panel__header">
-              <div>
-                <span>AI powered insights</span>
-                <h2>Sentiment + signals</h2>
-              </div>
-              <span className="panel-tag">AI</span>
-            </div>
-
-            <div className="insights-layout">
-              <div className="gauge-card">
-                <div className="gauge">
-                  <div className="gauge__needle" />
-                </div>
-                <strong>Very bullish</strong>
-                <p>Current market sentiment remains constructive across core mandate areas.</p>
-              </div>
-
-              <div className="signal-feed">
-                {signalItems.map((item) => (
-                  <article key={item.title}>
-                    <div>
-                      <h3>{item.title}</h3>
-                      <span>{item.age}</span>
-                    </div>
-                    <p>{item.detail}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </article>
-
-          <article className="panel">
-            <div className="panel__header">
-              <div>
-                <span>Quant lab</span>
-                <h2>Candidate chart</h2>
-              </div>
-              <span className="panel-tag">Quant</span>
-            </div>
-
-            <div className="quant-layout">
-              <div className="chart-card">
-                <svg viewBox="0 0 420 200" role="img" aria-label="Candidate chart">
-                  <defs>
-                    <linearGradient id="candle-fill" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(233, 197, 106, 0.9)" />
-                      <stop offset="100%" stopColor="rgba(233, 197, 106, 0.08)" />
-                    </linearGradient>
-                  </defs>
-                  {candleSeries.map((value, index) => {
-                    const x = 18 + index * 32;
-                    const barHeight = value * 1.4;
-                    return (
-                      <g key={x}>
-                        <line className="chart-grid-line" x1={x + 10} x2={x + 10} y1="28" y2="176" />
-                        <rect
-                          fill="url(#candle-fill)"
-                          height={barHeight}
-                          rx="6"
-                          width="18"
-                          x={x}
-                          y={176 - barHeight}
-                        />
-                      </g>
-                    );
-                  })}
-                  <polyline
-                    className="chart-line"
-                    fill="none"
-                    points={buildPolyline(candleSeries, 372, 150)
-                      .split(" ")
-                      .map((pair) => {
-                        const [x, y] = pair.split(",").map(Number);
-                        return `${x + 24},${y + 26}`;
-                      })
-                      .join(" ")}
-                  />
-                </svg>
-              </div>
-
-              <div className="chart-card chart-card--comparison">
-                <svg viewBox="0 0 220 160" role="img" aria-label="Model comparison">
-                  <polyline className="chart-line" fill="none" points={buildPolyline(comparisonA, 180, 110)} />
-                  <polyline className="chart-line chart-line--soft" fill="none" points={buildPolyline(comparisonB, 180, 110)} />
-                </svg>
-                <div className="algo-table">
-                  <div>
-                    <span>Algorithm perf.</span>
-                    <strong>54.5%</strong>
+              {/* ACTIVE WATCHLIST */}
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <Wallet size={16} /> <h2>ACTIVE WATCHLIST</h2>
                   </div>
-                  <div>
-                    <span>Algorithm 1</span>
-                    <strong>0.25%</strong>
-                  </div>
-                  <div>
-                    <span>Algorithm 2</span>
-                    <strong>0.25%</strong>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">WOW BENEFIT</span>
+                    <button><MoreHorizontal size={14} /></button>
                   </div>
                 </div>
-              </div>
-            </div>
-          </article>
-
-          <article className="panel">
-            <div className="panel__header">
-              <div>
-                <span>Risk alerts</span>
-                <h2>Scam detector</h2>
-              </div>
-              <span className="panel-tag">Risk</span>
-            </div>
-
-            <div className="risk-layout">
-              <div className="risk-summary">
-                <div className="risk-summary__card risk-summary__card--critical">
-                  <span>Critical</span>
-                  <strong>3</strong>
-                  <em>projects</em>
-                </div>
-                <div className="risk-summary__card risk-summary__card--high">
-                  <span>High risk</span>
-                  <strong>2</strong>
-                  <em>projects</em>
-                </div>
-                <div className="risk-summary__card risk-summary__card--low">
-                  <span>Low risk</span>
-                  <strong>1</strong>
-                  <em>project</em>
+                <div className="scr-panel-body">
+                  <table className="scr-table">
+                    <thead>
+                      <tr>
+                        <th>Ticker</th><th>Price</th><th>Price</th><th>Sparkline</th><th>Change</th><th>Target</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>AVDK</td><td>$9.30</td><td>$1548.30</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([2, 5, 3, 6, 4, 8])} /></svg></td><td style={{ color: '#d2b45e' }}>13.38%</td><td style={{ color: '#4ade80' }}>+3.23%</td></tr>
+                      <tr><td>ALONI</td><td>$2.70</td><td>$92.90</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([4, 3, 5, 2, 4, 4])} /></svg></td><td style={{ color: '#d2b45e' }}>7.25%</td><td style={{ color: '#4ade80' }}>+2.59%</td></tr>
+                      <tr><td>CRYPD</td><td>$13.70</td><td>$398.70</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([1, 3, 2, 5, 3, 6])} /></svg></td><td style={{ color: '#d2b45e' }}>3.38%</td><td style={{ color: '#4ade80' }}>+5.98%</td></tr>
+                      <tr><td>BREC</td><td>$3.90</td><td>$38.95</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([6, 5, 7, 4, 6, 8])} /></svg></td><td style={{ color: '#d2b45e' }}>1.25%</td><td style={{ color: '#4ade80' }}>+9.60%</td></tr>
+                      <tr><td>FMRN</td><td>$3.00</td><td>$92.75</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([3, 5, 4, 7, 5, 9])} /></svg></td><td style={{ color: '#d2b45e' }}>3.38%</td><td style={{ color: '#4ade80' }}>+4.99%</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              <div className="risk-bars">
-                {[
-                  ["Critical", "27/23", 82],
-                  ["High risk", "58/55", 71],
-                  ["Low risk", "1/34", 22]
-                ].map(([label, value, width]) => (
-                  <div key={label}>
-                    <div className="risk-bars__label">
-                      <span>{label}</span>
-                      <em>{value}</em>
-                    </div>
-                    <div className="risk-bars__track">
-                      <span style={{ width: `${width}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="risk-list">
-                {[
-                  "MetaVerse Scam? - High risk",
-                  "Bridge exploit exposure - High risk",
-                  "Anonymous team allocation - High risk",
-                  "Inconsistent treasury wallet - High risk"
-                ].map((item) => (
-                  <article key={item}>
-                    <ShieldCheck size={14} />
-                    <span>{item}</span>
-                  </article>
-                ))}
-              </div>
             </div>
-          </article>
-
-          <article className="panel panel--ventures">
-            <div className="panel__header">
-              <div>
-                <span>Ventures</span>
-                <h2>Scouted pipeline</h2>
-              </div>
-              <span className="panel-tag">Venture</span>
-            </div>
-
-            <div className="venture-grid">
-              {ventures.map((venture) => (
-                <article className="venture-card" key={venture.title}>
-                  <div className="venture-card__icon">
-                    <Sparkles size={16} />
-                  </div>
-                  <h3>{venture.title}</h3>
-                  <p>{venture.stage}</p>
-                  <strong>{venture.score}</strong>
-                  <button type="button">Learn more</button>
-                </article>
-              ))}
-            </div>
-          </article>
-
-          <article className="panel panel--watchlist">
-            <div className="panel__header">
-              <div>
-                <span>Active watchlist</span>
-                <h2>Live candidates</h2>
-              </div>
-              <span className="panel-tag">Monitor</span>
-            </div>
-
-            <div className="watchlist-table">
-              <div className="watchlist-table__head">
-                <span>Ticker</span>
-                <span>Price</span>
-                <span>Sparkline</span>
-                <span>Change</span>
-                <span>Target</span>
-              </div>
-              {watchlist.map((item) => (
-                <div className="watchlist-table__row" key={item.ticker}>
-                  <strong>{item.ticker}</strong>
-                  <span>{item.price}</span>
-                  <svg viewBox="0 0 120 36" aria-hidden="true">
-                    <polyline className="chart-line" fill="none" points={buildSpark(item.spark)} />
-                  </svg>
-                  <span>{item.change}</span>
-                  <em>{item.target}</em>
-                </div>
-              ))}
-            </div>
-          </article>
-        </div>
-
-        <section className="dashboard-bottom-strip">
-          <div className="dashboard-bottom-strip__copy">
-            <Gauge size={16} />
-            Last updated: 17:13 AM
-          </div>
-          <div className="dashboard-bottom-strip__copy">
-            <Sparkles size={16} />
-            AI status: monitoring
-          </div>
-          <div className="dashboard-bottom-strip__copy">
-            <Image alt="Office" height={768} src="/brand/office.jpeg" width={1376} />
-            Live operating room
-          </div>
+          )}
         </section>
-        </section>
-      </main>
-    </AuthGate>
+
+        <footer className="scr-footer">
+          <div className="scr-footer-left">
+            <span>Last Updated: Time 17:15:32 AM</span>
+          </div>
+          <div className="scr-footer-right">
+            API Status: <span style={{ color: '#4ade80' }}>Online</span>
+          </div>
+        </footer>
+      </div>
+    </div>
   );
 }

@@ -107,6 +107,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <a href="#platform">Platforms</a>
             <a href="#security">Security</a>
             <a href="#about">About</a>
+            <Link href="/mobile">Mobile App</Link>
             <a href="/dashboard">Dashboard</a>
           </nav>
 
@@ -356,6 +357,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <a href="#security">Security</a>
               <a href="#about">About</a>
               <a href="#presence">Presence</a>
+              <Link href="/mobile">Mobile App</Link>
             </div>
           </div>
 
