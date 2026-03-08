@@ -70,7 +70,7 @@ export function MobileAppShell() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("home");
   const [isPending, startTransition] = useTransition();
-  const displayName = user?.displayName || "AlphaForge Member";
+  const displayName = user?.user_metadata?.full_name || "AlphaForge Member";
   const firstName = displayName.split(" ")[0] || "Member";
 
   function handleSignOut() {

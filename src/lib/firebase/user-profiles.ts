@@ -3,6 +3,7 @@
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "@/lib/firebase/client";
+import { supabase } from "@/lib/supabase/client";
 
 type UserProfileInput = {
   firstName?: string;
@@ -45,33 +46,46 @@ export async function upsertUserProfile({
     throw new Error("Cloud Firestore is not configured.");
   }
 
-  const userRef = doc(db, "users", user.uid);
-  const existingProfile = await getDoc(userRef);
-  const existingData = (existingProfile.data() ?? {}) as Record<string, unknown>;
+  // 🔥 1. Keep saving basic profile to Firebase Auth / Firestore if needed, or remove. 
+  // For your request, we transition the actual user record and balance to Supabase
   const fallbackName = splitDisplayName(getDisplayNameFromUser(user));
-  const existingFirstName = readStringField(existingData, "firstName") || readStringField(existingData, "First name");
-  const existingLastName = readStringField(existingData, "lastName") || readStringField(existingData, "Last name");
-  const resolvedFirstName = firstName?.trim() || existingFirstName || fallbackName.firstName;
-  const resolvedLastName = lastName?.trim() || existingLastName || fallbackName.lastName;
-  const existingMarketingOptIn = typeof existingData.marketingOptIn === "boolean" ? existingData.marketingOptIn : false;
+  const resolvedFirstName = firstName?.trim() || fallbackName.firstName;
+  const resolvedLastName = lastName?.trim() || fallbackName.lastName;
   const resolvedDisplayName =
     `${resolvedFirstName} ${resolvedLastName}`.trim() || getDisplayNameFromUser(user);
 
-  await setDoc(
-    userRef,
-    {
+  // 🔴 Fetch existing user from Supabase
+  const { data: existingUser, error: fetchError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('uid', user.uid)
+    .single();
+
+  const existingBalance = existingUser?.balance ?? 145891.87;
+  const existingYield = existingUser?.yield ?? 12.86;
+  const existingDailyChange = existingUser?.dailyChange ?? 1764.00;
+
+  // 🟢 UPSERT into Supabase
+  const { error } = await supabase
+    .from('users')
+    .upsert({
       uid: user.uid,
       email: user.email ?? "",
-      displayName: resolvedDisplayName,
-      firstName: resolvedFirstName,
-      lastName: resolvedLastName,
-      photoURL: user.photoURL ?? "",
+      display_name: resolvedDisplayName,
+      first_name: resolvedFirstName,
+      last_name: resolvedLastName,
+      photo_url: user.photoURL ?? "",
       provider,
-      marketingOptIn: marketingOptIn ?? existingMarketingOptIn,
-      lastSignInAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      createdAt: existingProfile.exists() ? existingData.createdAt : serverTimestamp()
-    },
-    { merge: true }
-  );
+      marketing_opt_in: marketingOptIn ?? existingUser?.marketing_opt_in ?? false,
+      last_sign_in_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      balance: existingBalance,
+      yield: existingYield,
+      daily_change: existingDailyChange,
+      created_at: existingUser ? existingUser.created_at : new Date().toISOString()
+    }, { onConflict: 'uid' });
+
+  if (error) {
+    console.error("Error saving user to Supabase:", error);
+  }
 }

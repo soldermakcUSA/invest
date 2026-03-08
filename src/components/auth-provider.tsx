@@ -2,9 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import type { User } from "firebase/auth";
-import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
-import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
+import { supabase } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 type AuthContextValue = {
   isConfigured: boolean;
@@ -17,30 +16,32 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(isFirebaseConfigured);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
-      setIsLoading(false);
-      return;
-    }
-
-    return onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser);
+    // Attempt to fetch current session initially
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setIsLoading(false);
     });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value: AuthContextValue = {
-    isConfigured: isFirebaseConfigured,
+    isConfigured: true, // Assuming supabase is configured
     isLoading,
     user,
     async signOut() {
-      if (!auth) {
-        return;
-      }
-
-      await firebaseSignOut(auth);
+      await supabase.auth.signOut();
     }
   };
 

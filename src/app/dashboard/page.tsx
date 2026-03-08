@@ -6,6 +6,7 @@ import "./dashboard.css";
 import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
+import { supabase } from "@/lib/supabase/client";
 import {
   Bell,
   Bot,
@@ -88,6 +89,88 @@ export default function DashboardPage() {
   const [auditInput, setAuditInput] = useState("");
   const [auditOutput, setAuditOutput] = useState<string | null>(null);
   const [isAuditLoading, setIsAuditLoading] = useState(false);
+  const [userData, setUserData] = useState<{ balance: number; yield: number; dailyChange: number } | null>(null);
+
+  useEffect(() => {
+    let channel: any;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const user = session?.user;
+      if (user) {
+        // Initial fetch from Supabase
+        const fetchUserData = async () => {
+          let { data, error: fetchError } = await supabase
+            .from("users")
+            .select("balance, yield, daily_change")
+            .eq("uid", user.id)
+            .maybeSingle();
+
+          if (!data && !fetchError) {
+            const fallbackName = user.user_metadata?.full_name?.split(/\s+/) || ["", ""];
+            const { data: newData } = await supabase.from("users").insert({
+              uid: user.id,
+              email: user.email || "",
+              display_name: user.user_metadata?.full_name || "",
+              first_name: user.user_metadata?.first_name || fallbackName[0] || "",
+              last_name: user.user_metadata?.last_name || fallbackName.slice(1).join(" ") || "",
+              photo_url: user.user_metadata?.avatar_url || "",
+              provider: user.app_metadata?.provider || "supabase",
+              balance: 145891.87,
+              yield: 12.86,
+              daily_change: 1764.00,
+              last_sign_in_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            }).select("balance, yield, daily_change").maybeSingle();
+
+            if (newData) data = newData;
+          }
+
+          if (data) {
+            setUserData({
+              balance: data.balance ?? 145891.87,
+              yield: data.yield ?? 12.86,
+              dailyChange: data.daily_change ?? 1764.00,
+            });
+          }
+        };
+
+        fetchUserData();
+
+        // Listen for realtime changes on the user's row
+        channel = supabase
+          .channel("public:users")
+          .on(
+            "postgres_changes",
+            { event: "UPDATE", schema: "public", table: "users", filter: `uid=eq.${user.id}` },
+            (payload) => {
+              if (payload.new) {
+                setUserData({
+                  balance: payload.new.balance ?? 145891.87,
+                  yield: payload.new.yield ?? 12.86,
+                  dailyChange: payload.new.daily_change ?? 1764.00,
+                });
+              }
+            }
+          )
+          .subscribe();
+      } else {
+        setUserData(null);
+        if (channel) {
+          supabase.removeChannel(channel);
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (theme === 'light') {
@@ -187,12 +270,16 @@ export default function DashboardPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ marginBottom: '20px' }}>
                       <p style={{ color: '#ccc', fontSize: '10px', textTransform: 'uppercase' }}>Total Value</p>
-                      <h3 style={{ fontSize: '28px', color: '#fff', margin: '4px 0' }}>$1,45,891.87</h3>
-                      <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ $3,900 (+12.86%)</p>
+                      <h3 style={{ fontSize: '28px', color: '#fff', margin: '4px 0' }}>
+                        ${userData ? userData.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "145,891.87"}
+                      </h3>
+                      <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ $3,900 (+{userData ? userData.yield.toFixed(2) : "12.86"}%)</p>
                     </div>
                     <div>
                       <p style={{ color: '#ccc', fontSize: '10px', textTransform: 'uppercase' }}>Daily Change</p>
-                      <h3 style={{ fontSize: '20px', color: '#fff', margin: '4px 0' }}>+1,764 <span style={{ fontSize: '12px', color: '#ccc' }}>(1.19%)</span></h3>
+                      <h3 style={{ fontSize: '20px', color: '#fff', margin: '4px 0' }}>
+                        +{userData ? userData.dailyChange.toLocaleString('en-US') : "1,764"} <span style={{ fontSize: '12px', color: '#ccc' }}>(1.19%)</span>
+                      </h3>
                       <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ +32.56%</p>
                     </div>
                   </div>

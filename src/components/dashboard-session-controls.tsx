@@ -20,7 +20,7 @@ export function DashboardSessionControls() {
     <>
       <div className="status-chip">
         <span />
-        {user?.displayName || user?.email || "Authenticated"}
+        {user?.user_metadata?.full_name || user?.email || "Authenticated"}
       </div>
       <button className="button button--ghost button--wide" disabled={isPending} onClick={handleSignOut} type="button">
         {isPending ? "Signing out..." : "Sign out"}
