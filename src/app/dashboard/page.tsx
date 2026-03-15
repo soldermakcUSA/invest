@@ -103,46 +103,54 @@ function CryptoWatchlist() {
   const [cryptos, setCryptos] = useState<CryptoData[]>([]);
 
   useEffect(() => {
-    let ws: WebSocket;
+    let interval: NodeJS.Timeout;
     
-    const fetchInitialData = async () => {
+    const fetchCryptoData = async () => {
       try {
-        const response = await fetch('https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,binance-coin,ripple');
+        const ids = 'bitcoin,ethereum,solana,binancecoin,ripple';
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_vol=true&include_24hr_change=true`);
+        
+        if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
-        const initialCryptos = data.data.map((asset: any) => ({
-          id: asset.id,
-          symbol: asset.symbol,
-          name: asset.name,
-          price: parseFloat(asset.priceUsd).toFixed(2),
-          change24h: parseFloat(asset.changePercent24Hr).toFixed(2),
-          volume24h: (parseFloat(asset.volumeUsd24Hr) / 1000000000).toFixed(2) + 'B',
-          sparkline: Array.from({ length: 10 }, () => Math.floor(Math.random() * 8) + 2)
-        }));
-        
-        setCryptos(initialCryptos);
+        const mapData = [
+          { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+          { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+          { id: 'solana', symbol: 'SOL', name: 'Solana' },
+          { id: 'binancecoin', symbol: 'BNB', name: 'Binance Coin' },
+          { id: 'ripple', symbol: 'XRP', name: 'Ripple' }
+        ];
 
-        ws = new WebSocket('wss://ws.coincap.io/prices?assets=bitcoin,ethereum,solana,binance-coin,ripple');
+        const updatedCryptos = mapData.map((item) => {
+          const coin = data[item.id] || {};
+          const price = coin.usd || 0;
+          const vol = coin.usd_24h_vol || 0;
+          const change = coin.usd_24h_change || 0;
+          
+          return {
+            id: item.id,
+            symbol: item.symbol,
+            name: item.name,
+            price: price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
+            change24h: change.toFixed(2),
+            volume24h: (vol / 1000000000).toFixed(2) + 'B',
+            sparkline: Array.from({ length: 10 }, () => Math.floor(Math.random() * 8) + 2)
+          };
+        });
         
-        ws.onmessage = (event) => {
-          const prices = JSON.parse(event.data);
-          setCryptos(prev => prev.map(crypto => {
-            if (prices[crypto.id]) {
-              return { ...crypto, price: parseFloat(prices[crypto.id]).toFixed(2) };
-            }
-            return crypto;
-          }));
-        };
+        setCryptos(updatedCryptos);
       } catch (error) {
         console.error("Error fetching crypto data:", error);
       }
     };
 
-    fetchInitialData();
+    fetchCryptoData();
+    interval = setInterval(fetchCryptoData, 15000); // refresh every 15s
 
-    return () => {
-      if (ws) ws.close();
-    };
+    return () => clearInterval(interval);
   }, []);
 
   return (
