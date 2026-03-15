@@ -185,7 +185,7 @@ export default function DashboardPage() {
         <div className="scr-sidebar-user">
           <div className="scr-sidebar-user-info">
             {photoUrl ? (
-              <img src={photoUrl} alt={displayName} className="scr-sidebar-avatar" referrerPolicy="no-referrer" />
+              <Image src={photoUrl} alt={displayName} width={36} height={36} className="scr-sidebar-avatar" referrerPolicy="no-referrer" unoptimized />
             ) : (
               <div className="scr-sidebar-avatar scr-sidebar-avatar--initials">
                 {getInitials(displayName)}
@@ -224,7 +224,7 @@ export default function DashboardPage() {
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
                 {photoUrl ? (
-                  <img src={photoUrl} alt={displayName} className="scr-avatar-img" referrerPolicy="no-referrer" />
+                  <Image src={photoUrl} alt={displayName} width={36} height={36} className="scr-avatar-img" referrerPolicy="no-referrer" unoptimized />
                 ) : (
                   <div className="scr-avatar-initials">
                     {getInitials(displayName)}
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 <div className="scr-user-dropdown">
                   <div className="scr-user-dropdown-header">
                     {photoUrl ? (
-                      <img src={photoUrl} alt={displayName} className="scr-dropdown-avatar" referrerPolicy="no-referrer" />
+                      <Image src={photoUrl} alt={displayName} width={40} height={40} className="scr-dropdown-avatar" referrerPolicy="no-referrer" unoptimized />
                     ) : (
                       <div className="scr-dropdown-avatar scr-dropdown-avatar--initials">
                         {getInitials(displayName)}
@@ -267,7 +267,7 @@ export default function DashboardPage() {
               <div className="scr-panel scr-panel--welcome">
                 <div className="scr-panel-body" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
                   {photoUrl ? (
-                    <img src={photoUrl} alt={displayName} style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid rgba(210,180,94,0.4)' }} referrerPolicy="no-referrer" />
+                    <Image src={photoUrl} alt={displayName} width={48} height={48} style={{ borderRadius: '50%', border: '2px solid rgba(210,180,94,0.4)' }} referrerPolicy="no-referrer" unoptimized />
                   ) : (
                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid rgba(210,180,94,0.4)', background: 'rgba(210,180,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d2b45e', fontWeight: 'bold', fontSize: '18px' }}>
                       {getInitials(displayName)}
@@ -483,10 +483,10 @@ export default function DashboardPage() {
                       <h3 style={{ fontSize: '11px', color: '#ccc' }}>Risk Rating</h3>
                     </div>
                     <div className="scr-list">
-                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><img src="/brand/team.jpeg" width={16} height={16} /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
                     </div>
                   </div>
                 </div>
