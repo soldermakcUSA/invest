@@ -137,6 +137,7 @@
     border-bottom: 1px solid var(--af-border);
     position: relative;
     flex-shrink: 0;
+    z-index: 50;
 }
 
 .scr-top-center {
@@ -600,12 +601,12 @@
     top: calc(100% + 8px);
     right: 0;
     width: 240px;
-    background: rgba(14, 16, 22, 0.96);
+    background: rgba(14, 16, 22, 0.98);
     border: 1px solid var(--af-border);
     border-radius: 8px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(20px);
-    z-index: 100;
+    z-index: 9999;
     overflow: hidden;
     animation: dropdown-in 0.15s ease-out;
 }

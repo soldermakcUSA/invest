@@ -29,6 +29,8 @@ export async function fetchOrCreateUserProfile(user: {
   user_metadata?: Record<string, any>;
   app_metadata?: Record<string, any>;
 }): Promise<UserProfile | null> {
+  console.log("[UserProfile] Fetching profile for uid:", user.id);
+
   // 1. Пытаемся получить существующую запись
   const { data: existing, error: fetchError } = await supabase
     .from("users")
@@ -37,7 +39,7 @@ export async function fetchOrCreateUserProfile(user: {
     .maybeSingle();
 
   if (fetchError) {
-    console.error("Error fetching user profile:", fetchError);
+    console.error("[UserProfile] Error fetching profile:", fetchError.message, fetchError.details, fetchError.hint);
     return null;
   }
 
@@ -68,10 +70,16 @@ export async function fetchOrCreateUserProfile(user: {
       updateFields.display_name = nameFromParts;
     }
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("users")
       .update(updateFields)
       .eq("uid", user.id);
+
+    if (updateError) {
+      console.error("[UserProfile] Error updating profile:", updateError.message, updateError.details, updateError.hint);
+    } else {
+      console.log("[UserProfile] Profile updated successfully for uid:", user.id);
+    }
 
     return { ...profile, ...updateFields } as UserProfile;
   }
@@ -103,6 +111,8 @@ export async function fetchOrCreateUserProfile(user: {
     created_at: new Date().toISOString(),
   };
 
+  console.log("[UserProfile] Creating new profile for uid:", user.id, "name:", newProfile.display_name);
+
   const { data: created, error: insertError } = await supabase
     .from("users")
     .upsert(newProfile, { onConflict: "uid" })
@@ -110,10 +120,11 @@ export async function fetchOrCreateUserProfile(user: {
     .maybeSingle();
 
   if (insertError) {
-    console.error("Error creating user profile:", insertError);
+    console.error("[UserProfile] ERROR creating profile:", insertError.message, insertError.details, insertError.hint, insertError.code);
     return null;
   }
 
+  console.log("[UserProfile] Profile created successfully:", created);
   return created as UserProfile;
 }
 
