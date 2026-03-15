@@ -12,7 +12,7 @@ export function OrbitalBrand({ compact = false }: OrbitalBrandProps) {
           alt=""
           className="orbital-brand__image"
           height={54}
-          src="/brand/header-logo.png"
+          src="/brand/logogo.png"
           width={54}
         />
       </div>
