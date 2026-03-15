@@ -89,6 +89,128 @@ function getInitials(displayName: string): string {
   return parts[0][0]?.toUpperCase() || "U";
 }
 
+interface CryptoData {
+  id: string;
+  symbol: string;
+  name: string;
+  price: string;
+  change24h: string;
+  volume24h: string;
+  sparkline: number[];
+}
+
+function CryptoWatchlist() {
+  const [cryptos, setCryptos] = useState<CryptoData[]>([]);
+
+  useEffect(() => {
+    let ws: WebSocket;
+    
+    const fetchInitialData = async () => {
+      try {
+        const response = await fetch('https://api.coincap.io/v2/assets?ids=bitcoin,ethereum,solana,binance-coin,ripple');
+        const data = await response.json();
+        
+        const initialCryptos = data.data.map((asset: any) => ({
+          id: asset.id,
+          symbol: asset.symbol,
+          name: asset.name,
+          price: parseFloat(asset.priceUsd).toFixed(2),
+          change24h: parseFloat(asset.changePercent24Hr).toFixed(2),
+          volume24h: (parseFloat(asset.volumeUsd24Hr) / 1000000000).toFixed(2) + 'B',
+          sparkline: Array.from({ length: 10 }, () => Math.floor(Math.random() * 8) + 2)
+        }));
+        
+        setCryptos(initialCryptos);
+
+        ws = new WebSocket('wss://ws.coincap.io/prices?assets=bitcoin,ethereum,solana,binance-coin,ripple');
+        
+        ws.onmessage = (event) => {
+          const prices = JSON.parse(event.data);
+          setCryptos(prev => prev.map(crypto => {
+            if (prices[crypto.id]) {
+              return { ...crypto, price: parseFloat(prices[crypto.id]).toFixed(2) };
+            }
+            return crypto;
+          }));
+        };
+      } catch (error) {
+        console.error("Error fetching crypto data:", error);
+      }
+    };
+
+    fetchInitialData();
+
+    return () => {
+      if (ws) ws.close();
+    };
+  }, []);
+
+  return (
+    <div className="scr-panel">
+      <div className="scr-panel-header">
+        <div className="scr-panel-title">
+          <Wallet size={16} /> <h2>ACTIVE WATCHLIST <span className="cat">(CRYPTO)</span></h2>
+        </div>
+        <div className="scr-panel-actions">
+          <span className="scr-tag" style={{ background: 'rgba(74, 222, 128, 0.15)', color: '#4ade80' }}>LIVE TICKER</span>
+          <button><MoreHorizontal size={14} /></button>
+        </div>
+      </div>
+      <div className="scr-panel-body">
+        <table className="scr-table">
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left' }}>Asset</th>
+              <th style={{ textAlign: 'right' }}>Price</th>
+              <th style={{ textAlign: 'right' }}>24h Vol</th>
+              <th style={{ textAlign: 'center' }}>Sparkline</th>
+              <th style={{ textAlign: 'right' }}>24h Chg</th>
+              <th style={{ textAlign: 'right' }}>Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cryptos.map(crypto => {
+              const isPositive = parseFloat(crypto.change24h) >= 0;
+              const color = isPositive ? '#4ade80' : '#f87171';
+              return (
+                <tr key={crypto.id}>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600, color: '#fff' }}>{crypto.symbol}</span>
+                      <span style={{ fontSize: '10px', color: '#777' }}>{crypto.name}</span>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: 'right', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>${crypto.price}</td>
+                  <td style={{ textAlign: 'right', color: '#ccc', fontVariantNumeric: 'tabular-nums' }}>${crypto.volume24h}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <svg viewBox="0 0 60 20" width="60" height="20" style={{ display: 'inline-block' }}>
+                      <polyline fill="none" stroke={color} strokeWidth="1" points={buildSpark(crypto.sparkline)} />
+                    </svg>
+                  </td>
+                  <td style={{ textAlign: 'right', color: color, fontVariantNumeric: 'tabular-nums' }}>
+                    {isPositive ? '+' : ''}{crypto.change24h}%
+                  </td>
+                  <td style={{ textAlign: 'right', color: '#d2b45e', fontVariantNumeric: 'tabular-nums' }}>
+                    +5.00%
+                  </td>
+                </tr>
+              );
+            })}
+            {cryptos.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#777' }}>
+                  <Loader2 size={24} className="lucide-spin" style={{ margin: '0 auto', display: 'block', marginBottom: '8px', animation: 'spin 1s linear infinite' }} />
+                  Loading real-time quotes...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [theme, setTheme] = useState("dark");
@@ -527,33 +649,7 @@ export default function DashboardPage() {
               </div>
 
               {/* ACTIVE WATCHLIST */}
-              <div className="scr-panel">
-                <div className="scr-panel-header">
-                  <div className="scr-panel-title">
-                    <Wallet size={16} /> <h2>ACTIVE WATCHLIST</h2>
-                  </div>
-                  <div className="scr-panel-actions">
-                    <span className="scr-tag">WOW BENEFIT</span>
-                    <button><MoreHorizontal size={14} /></button>
-                  </div>
-                </div>
-                <div className="scr-panel-body">
-                  <table className="scr-table">
-                    <thead>
-                      <tr>
-                        <th>Ticker</th><th>Price</th><th>Price</th><th>Sparkline</th><th>Change</th><th>Target</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr><td>AVDK</td><td>$9.30</td><td>$1548.30</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([2, 5, 3, 6, 4, 8])} /></svg></td><td style={{ color: '#d2b45e' }}>13.38%</td><td style={{ color: '#4ade80' }}>+3.23%</td></tr>
-                      <tr><td>ALONI</td><td>$2.70</td><td>$92.90</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([4, 3, 5, 2, 4, 4])} /></svg></td><td style={{ color: '#d2b45e' }}>7.25%</td><td style={{ color: '#4ade80' }}>+2.59%</td></tr>
-                      <tr><td>CRYPD</td><td>$13.70</td><td>$398.70</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([1, 3, 2, 5, 3, 6])} /></svg></td><td style={{ color: '#d2b45e' }}>3.38%</td><td style={{ color: '#4ade80' }}>+5.98%</td></tr>
-                      <tr><td>BREC</td><td>$3.90</td><td>$38.95</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([6, 5, 7, 4, 6, 8])} /></svg></td><td style={{ color: '#d2b45e' }}>1.25%</td><td style={{ color: '#4ade80' }}>+9.60%</td></tr>
-                      <tr><td>FMRN</td><td>$3.00</td><td>$92.75</td><td><svg viewBox="0 0 60 20" width="60" height="20"><polyline fill="none" stroke="#d2b45e" strokeWidth="1" points={buildSpark([3, 5, 4, 7, 5, 9])} /></svg></td><td style={{ color: '#d2b45e' }}>3.38%</td><td style={{ color: '#4ade80' }}>+4.99%</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <CryptoWatchlist />
 
             </div>
           )}
