@@ -107,8 +107,17 @@ export default function DashboardPage() {
   const balance = profile?.balance ?? 0;
   const yieldPercent = profile?.yield ?? 0;
   const dailyChange = profile?.daily_change ?? 0;
-  const displayName = profile?.display_name || user?.email || "User";
-  const photoUrl = profile?.photo_url || "";
+
+  // Приоритет: first_name + last_name > display_name > user metadata > "User"
+  const fullNameFromProfile =
+    `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
+  const displayName =
+    fullNameFromProfile ||
+    profile?.display_name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.first_name ||
+    "User";
+  const photoUrl = profile?.photo_url || user?.user_metadata?.avatar_url || "";
   const userEmail = profile?.email || user?.email || "";
 
   useEffect(() => {
