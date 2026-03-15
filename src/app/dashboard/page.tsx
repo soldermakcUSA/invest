@@ -6,7 +6,7 @@ import "./dashboard.css";
 import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
-import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/components/auth-provider";
 import {
   Bell,
   Bot,
@@ -34,7 +34,8 @@ import {
   BarChart3,
   Rocket,
   MoreHorizontal,
-  LayoutGrid
+  LayoutGrid,
+  User as UserIcon
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area, Bar, ComposedChart, Legend
@@ -79,6 +80,15 @@ function buildSpark(values: number[]) {
   return buildPolyline(values.map((value: number) => value * 2.5), 60, 20);
 }
 
+function getInitials(displayName: string): string {
+  if (!displayName) return "U";
+  const parts = displayName.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return parts[0][0]?.toUpperCase() || "U";
+}
+
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [theme, setTheme] = useState("dark");
@@ -89,88 +99,17 @@ export default function DashboardPage() {
   const [auditInput, setAuditInput] = useState("");
   const [auditOutput, setAuditOutput] = useState<string | null>(null);
   const [isAuditLoading, setIsAuditLoading] = useState(false);
-  const [userData, setUserData] = useState<{ balance: number; yield: number; dailyChange: number } | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
-  useEffect(() => {
-    let channel: any;
+  const { user, profile, signOut } = useAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user;
-      if (user) {
-        // Initial fetch from Supabase
-        const fetchUserData = async () => {
-          let { data, error: fetchError } = await supabase
-            .from("users")
-            .select("balance, yield, daily_change")
-            .eq("uid", user.id)
-            .maybeSingle();
-
-          if (!data && !fetchError) {
-            const fallbackName = user.user_metadata?.full_name?.split(/\s+/) || ["", ""];
-            const { data: newData } = await supabase.from("users").insert({
-              uid: user.id,
-              email: user.email || "",
-              display_name: user.user_metadata?.full_name || "",
-              first_name: user.user_metadata?.first_name || fallbackName[0] || "",
-              last_name: user.user_metadata?.last_name || fallbackName.slice(1).join(" ") || "",
-              photo_url: user.user_metadata?.avatar_url || "",
-              provider: user.app_metadata?.provider || "supabase",
-              balance: 145891.87,
-              yield: 12.86,
-              daily_change: 1764.00,
-              last_sign_in_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            }).select("balance, yield, daily_change").maybeSingle();
-
-            if (newData) data = newData;
-          }
-
-          if (data) {
-            setUserData({
-              balance: data.balance ?? 145891.87,
-              yield: data.yield ?? 12.86,
-              dailyChange: data.daily_change ?? 1764.00,
-            });
-          }
-        };
-
-        fetchUserData();
-
-        // Listen for realtime changes on the user's row
-        channel = supabase
-          .channel("public:users")
-          .on(
-            "postgres_changes",
-            { event: "UPDATE", schema: "public", table: "users", filter: `uid=eq.${user.id}` },
-            (payload) => {
-              if (payload.new) {
-                setUserData({
-                  balance: payload.new.balance ?? 145891.87,
-                  yield: payload.new.yield ?? 12.86,
-                  dailyChange: payload.new.daily_change ?? 1764.00,
-                });
-              }
-            }
-          )
-          .subscribe();
-      } else {
-        setUserData(null);
-        if (channel) {
-          supabase.removeChannel(channel);
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, []);
+  // Данные из профиля (реальные из Supabase)
+  const balance = profile?.balance ?? 0;
+  const yieldPercent = profile?.yield ?? 0;
+  const dailyChange = profile?.daily_change ?? 0;
+  const displayName = profile?.display_name || user?.email || "User";
+  const photoUrl = profile?.photo_url || "";
+  const userEmail = profile?.email || user?.email || "";
 
   useEffect(() => {
     if (theme === 'light') {
@@ -209,6 +148,11 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.assign("/");
+  };
+
   return (
     <div className="scr-app">
       <aside className="scr-sidebar">
@@ -227,6 +171,26 @@ export default function DashboardPage() {
             </button>
           ))}
         </nav>
+
+        {/* User info в сайдбаре */}
+        <div className="scr-sidebar-user">
+          <div className="scr-sidebar-user-info">
+            {photoUrl ? (
+              <img src={photoUrl} alt={displayName} className="scr-sidebar-avatar" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="scr-sidebar-avatar scr-sidebar-avatar--initials">
+                {getInitials(displayName)}
+              </div>
+            )}
+            <div className="scr-sidebar-user-text">
+              <span className="scr-sidebar-user-name">{displayName}</span>
+              <span className="scr-sidebar-user-email">{userEmail}</span>
+            </div>
+          </div>
+          <button className="scr-sidebar-logout" onClick={handleSignOut} title="Sign Out">
+            <LogOut size={16} />
+          </button>
+        </div>
       </aside>
 
       <div className="scr-main">
@@ -245,8 +209,43 @@ export default function DashboardPage() {
               <Bell size={18} />
               <div className="scr-bell-dot">1</div>
             </button>
-            <div className="scr-avatar">
-              <img src="/brand/team.jpeg" alt="User" />
+            <div className="scr-user-menu-wrapper">
+              <button
+                className="scr-avatar-btn"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                {photoUrl ? (
+                  <img src={photoUrl} alt={displayName} className="scr-avatar-img" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="scr-avatar-initials">
+                    {getInitials(displayName)}
+                  </div>
+                )}
+              </button>
+              {showUserMenu && (
+                <div className="scr-user-dropdown">
+                  <div className="scr-user-dropdown-header">
+                    {photoUrl ? (
+                      <img src={photoUrl} alt={displayName} className="scr-dropdown-avatar" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="scr-dropdown-avatar scr-dropdown-avatar--initials">
+                        {getInitials(displayName)}
+                      </div>
+                    )}
+                    <div className="scr-dropdown-info">
+                      <span className="scr-dropdown-name">{displayName}</span>
+                      <span className="scr-dropdown-email">{userEmail}</span>
+                    </div>
+                  </div>
+                  <div className="scr-user-dropdown-divider" />
+                  <button className="scr-user-dropdown-item" onClick={() => { setActiveTab("Settings"); setShowUserMenu(false); }}>
+                    <Settings size={14} /> Settings
+                  </button>
+                  <button className="scr-user-dropdown-item scr-user-dropdown-item--danger" onClick={handleSignOut}>
+                    <LogOut size={14} /> Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -254,6 +253,30 @@ export default function DashboardPage() {
         <section className="scr-content">
           {activeTab === "Dashboard" && (
             <div className="scr-grid">
+
+              {/* Приветственная карточка */}
+              <div className="scr-panel scr-panel--welcome">
+                <div className="scr-panel-body" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
+                  {photoUrl ? (
+                    <img src={photoUrl} alt={displayName} style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid rgba(210,180,94,0.4)' }} referrerPolicy="no-referrer" />
+                  ) : (
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid rgba(210,180,94,0.4)', background: 'rgba(210,180,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d2b45e', fontWeight: 'bold', fontSize: '18px' }}>
+                      {getInitials(displayName)}
+                    </div>
+                  )}
+                  <div>
+                    <p style={{ color: '#888', fontSize: '12px', margin: 0 }}>Welcome back,</p>
+                    <h2 style={{ color: '#fff', fontSize: '20px', margin: '2px 0 0', fontWeight: 600 }}>{displayName}</h2>
+                    <p style={{ color: '#666', fontSize: '11px', margin: '2px 0 0' }}>{userEmail}</p>
+                  </div>
+                  <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                    <p style={{ color: '#888', fontSize: '10px', textTransform: 'uppercase', margin: 0 }}>Member Since</p>
+                    <p style={{ color: '#d2b45e', fontSize: '13px', fontWeight: 500, margin: '2px 0 0' }}>
+                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* PORTFOLIO OVERVIEW */}
               <div className="scr-panel">
@@ -271,14 +294,14 @@ export default function DashboardPage() {
                     <div style={{ marginBottom: '20px' }}>
                       <p style={{ color: '#ccc', fontSize: '10px', textTransform: 'uppercase' }}>Total Value</p>
                       <h3 style={{ fontSize: '28px', color: '#fff', margin: '4px 0' }}>
-                        ${userData ? userData.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "145,891.87"}
+                        ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </h3>
-                      <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ $3,900 (+{userData ? userData.yield.toFixed(2) : "12.86"}%)</p>
+                      <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ $3,900 (+{yieldPercent.toFixed(2)}%)</p>
                     </div>
                     <div>
                       <p style={{ color: '#ccc', fontSize: '10px', textTransform: 'uppercase' }}>Daily Change</p>
                       <h3 style={{ fontSize: '20px', color: '#fff', margin: '4px 0' }}>
-                        +{userData ? userData.dailyChange.toLocaleString('en-US') : "1,764"} <span style={{ fontSize: '12px', color: '#ccc' }}>(1.19%)</span>
+                        +{dailyChange.toLocaleString('en-US')} <span style={{ fontSize: '12px', color: '#ccc' }}>(1.19%)</span>
                       </h3>
                       <p style={{ color: '#4ade80', fontSize: '12px' }}>▲ +32.56%</p>
                     </div>

@@ -473,3 +473,238 @@
     background: white;
     filter: none;
 }
+
+/* ─── Sidebar User Profile ─── */
+.scr-sidebar-user {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid var(--af-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.scr-sidebar-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.scr-sidebar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--af-gold-dim);
+    flex-shrink: 0;
+}
+
+.scr-sidebar-avatar--initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(210, 180, 94, 0.1);
+    color: var(--af-gold);
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.scr-sidebar-user-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.scr-sidebar-user-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--af-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scr-sidebar-user-email {
+    font-size: 10px;
+    color: var(--af-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scr-sidebar-logout {
+    background: transparent;
+    border: none;
+    color: var(--af-muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.scr-sidebar-logout:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}
+
+/* ─── Header Avatar Button ─── */
+.scr-avatar-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--af-border);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 0.2s;
+}
+
+.scr-avatar-btn:hover {
+    border-color: var(--af-gold);
+}
+
+.scr-avatar-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scr-avatar-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(210, 180, 94, 0.15);
+    color: var(--af-gold);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* ─── User Dropdown Menu ─── */
+.scr-user-menu-wrapper {
+    position: relative;
+}
+
+.scr-user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 240px;
+    background: rgba(14, 16, 22, 0.96);
+    border: 1px solid var(--af-border);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(20px);
+    z-index: 100;
+    overflow: hidden;
+    animation: dropdown-in 0.15s ease-out;
+}
+
+@keyframes dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scr-user-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+}
+
+.scr-dropdown-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--af-gold-dim);
+    flex-shrink: 0;
+}
+
+.scr-dropdown-avatar--initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(210, 180, 94, 0.1);
+    color: var(--af-gold);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.scr-dropdown-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.scr-dropdown-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--af-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scr-dropdown-email {
+    font-size: 11px;
+    color: var(--af-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scr-user-dropdown-divider {
+    height: 1px;
+    background: var(--af-border);
+    margin: 0;
+}
+
+.scr-user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: var(--af-text);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.15s;
+    text-align: left;
+}
+
+.scr-user-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--af-gold);
+}
+
+.scr-user-dropdown-item--danger:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.06);
+}
+
+/* ─── Welcome Card ─── */
+.scr-panel--welcome {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--af-panel), rgba(210, 180, 94, 0.04));
+    border: 1px solid rgba(210, 180, 94, 0.2);
+}
