@@ -844,6 +844,139 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {activeTab === "AI Tools" && (
+            <div className="scr-grid">
+              <div className="scr-panel scr-panel--welcome" style={{ gridColumn: '1 / -1' }}>
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <BrainCircuit size={16} /> <h2>AI TOOLS</h2>
+                  </div>
+                  <div className="scr-panel-actions"><span className="scr-tag">LIVE AI</span></div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px' }}>Ask AlphaForge Intelligence</p>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      <input
+                        value={analystInput}
+                        onChange={(e) => setAnalystInput(e.target.value)}
+                        placeholder="Ask about markets, macro, crypto, or risk..."
+                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '6px', padding: '10px 12px', color: '#fff' }}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAnalystRequest()}
+                      />
+                      <button onClick={handleAnalystRequest} style={{ background: '#d2b45e', border: 'none', color: '#000', borderRadius: '6px', padding: '10px 14px', cursor: 'pointer', fontWeight: 700 }}>
+                        {isAnalystLoading ? '...' : 'Ask'}
+                      </button>
+                    </div>
+                    <div style={{ minHeight: '180px', background: 'rgba(210,180,94,0.05)', padding: '14px', borderRadius: '8px', color: '#e2e8f0', border: '1px solid rgba(210,180,94,0.15)', whiteSpace: 'pre-wrap' }}>
+                      {analystOutput}
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px' }}>Tool Stack</p>
+                    <div className="scr-list">
+                      <div className="scr-list-item"><Bot size={14} /> <span style={{ flex: 1 }}>Market Analyst</span><span style={{ color: '#4ade80' }}>Active</span></div>
+                      <div className="scr-list-item"><ShieldAlert size={14} /> <span style={{ flex: 1 }}>Scam Detector</span><span style={{ color: '#4ade80' }}>Active</span></div>
+                      <div className="scr-list-item"><Sparkles size={14} /> <span style={{ flex: 1 }}>Idea Generator</span><span style={{ color: '#d2b45e' }}>Ready</span></div>
+                      <div className="scr-list-item"><Gauge size={14} /> <span style={{ flex: 1 }}>Signal Engine</span><span style={{ color: '#d2b45e' }}>Preview</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Quant Analysis" && (
+            <div className="scr-grid">
+              <div className="scr-panel">
+                <div className="scr-panel-header"><div className="scr-panel-title"><BarChart3 size={16} /> <h2>QUANT ANALYSIS</h2></div></div>
+                <div className="scr-panel-body" style={{ height: '320px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={comparisonA.map((v, i) => ({ name: i * 25, primary: comparisonA[i], secondary: comparisonB[i] }))}>
+                      <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis dataKey="name" stroke="#777" tickLine={false} axisLine={false} />
+                      <YAxis stroke="#777" tickLine={false} axisLine={false} width={40} />
+                      <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid rgba(210,180,94,0.3)', borderRadius: 8 }} />
+                      <Bar dataKey="secondary" fill="rgba(255,255,255,0.18)" radius={[4,4,0,0]} />
+                      <Line type="monotone" dataKey="primary" stroke="#d2b45e" strokeWidth={2} dot={false} />
+                      <Legend />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              <div className="scr-panel">
+                <div className="scr-panel-header"><div className="scr-panel-title"><Radar size={16} /> <h2>MODEL SUMMARY</h2></div></div>
+                <div className="scr-panel-body">
+                  <div className="scr-list">
+                    <div className="scr-list-item"><span style={{ flex: 1 }}>Sharpe-like score</span><span style={{ color: '#4ade80' }}>1.82</span></div>
+                    <div className="scr-list-item"><span style={{ flex: 1 }}>Drawdown control</span><span style={{ color: '#d2b45e' }}>Stable</span></div>
+                    <div className="scr-list-item"><span style={{ flex: 1 }}>Signal consistency</span><span style={{ color: '#4ade80' }}>High</span></div>
+                    <div className="scr-list-item"><span style={{ flex: 1 }}>Portfolio beta</span><span style={{ color: '#ccc' }}>0.74</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Ventures" && (
+            <div className="scr-grid">
+              <div className="scr-panel" style={{ gridColumn: '1 / -1' }}>
+                <div className="scr-panel-header"><div className="scr-panel-title"><Rocket size={16} /> <h2>VENTURES</h2></div></div>
+                <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+                  {[
+                    { t: 'AI Infrastructure', d: 'Private Markets', p: 'Early-stage exposure to applied AI infrastructure and compute-related businesses.', i: 'A' },
+                    { t: 'Digital Assets', d: 'Crypto', p: 'Infrastructure and utility-driven blockchain projects with long-term network value.', i: 'D' },
+                    { t: 'Market Data', d: 'Research', p: 'Products and data businesses serving traders, analysts, and asset allocators.', i: 'M' },
+                    { t: 'Growth Capital', d: 'Opportunities', p: 'Selective private deals with asymmetric upside and strategic relevance.', i: 'G' },
+                  ].map((v) => (
+                    <div key={v.t} className="scr-venture-card">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                        <div style={{ width: '28px', height: '28px', background: 'rgba(210,180,94,0.1)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d2b45e', fontWeight: 'bold', fontSize: '14px', border: '1px solid rgba(210,180,94,0.3)' }}>{v.i}</div>
+                        <div style={{ lineHeight: 1.1 }}>
+                          <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff' }}>{v.t}</div>
+                          <div style={{ fontSize: '10px', color: '#777' }}>{v.d}</div>
+                        </div>
+                      </div>
+                      <h4 style={{ fontSize: '11px', color: '#ccc', marginBottom: '4px' }}>Investment Thesis</h4>
+                      <p style={{ fontSize: '10px', color: '#777', lineHeight: 1.5, marginBottom: '12px', flex: 1 }}>{v.p}</p>
+                      <button className="scr-btn-outline">Open brief</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Scam Check" && (
+            <div className="scr-grid">
+              <div className="scr-panel scr-panel--welcome" style={{ gridColumn: '1 / -1' }}>
+                <div className="scr-panel-header"><div className="scr-panel-title"><ShieldCheck size={16} /> <h2>SCAM CHECK</h2></div></div>
+                <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '20px' }}>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px' }}>Paste a project description, token pitch, or website summary</p>
+                    <textarea
+                      value={auditInput}
+                      onChange={(e) => setAuditInput(e.target.value)}
+                      placeholder="Describe the project, website claims, tokenomics, or team background..."
+                      style={{ width: '100%', minHeight: '180px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '8px', padding: '12px', color: '#fff', resize: 'vertical' }}
+                    />
+                    <div style={{ marginTop: '12px' }}>
+                      <button onClick={handleAuditRequest} style={{ background: '#d2b45e', border: 'none', color: '#000', borderRadius: '6px', padding: '10px 16px', cursor: 'pointer', fontWeight: 700 }}>
+                        {isAuditLoading ? 'Scanning...' : 'Run Risk Scan'}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px' }}>Audit Output</p>
+                    <div style={{ minHeight: '220px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(210,180,94,0.15)', borderRadius: '8px', padding: '14px', color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>
+                      {auditOutput || 'Awaiting project details for review.'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === "Settings" && (
             <div className="scr-grid">
               <div className="scr-panel scr-panel--welcome" style={{ gridColumn: '1 / -1' }}>
