@@ -7,6 +7,7 @@ import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
 import { useAuth } from "@/components/auth-provider";
+import { updateUserProfile } from "@/lib/supabase/user-data";
 import {
   Bell,
   Bot,
@@ -230,6 +231,15 @@ export default function DashboardPage() {
   const [auditOutput, setAuditOutput] = useState<string | null>(null);
   const [isAuditLoading, setIsAuditLoading] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [settingsForm, setSettingsForm] = useState({
+    display_name: "",
+    first_name: "",
+    last_name: "",
+    photo_url: "",
+    marketing_opt_in: false,
+  });
+  const [settingsStatus, setSettingsStatus] = useState<string | null>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const { user, profile, signOut } = useAuth();
 
@@ -257,6 +267,16 @@ export default function DashboardPage() {
       document.body.classList.remove('theme-light');
     }
   }, [theme]);
+
+  useEffect(() => {
+    setSettingsForm({
+      display_name: profile?.display_name || "",
+      first_name: profile?.first_name || "",
+      last_name: profile?.last_name || "",
+      photo_url: profile?.photo_url || "",
+      marketing_opt_in: profile?.marketing_opt_in || false,
+    });
+  }, [profile]);
 
   const handleAnalystRequest = async () => {
     if (!analystInput.trim()) return;
@@ -290,6 +310,20 @@ export default function DashboardPage() {
   const handleSignOut = async () => {
     await signOut();
     window.location.assign("/");
+  };
+
+  const handleSaveSettings = async () => {
+    if (!user) return;
+    setIsSavingSettings(true);
+    setSettingsStatus(null);
+    try {
+      const updated = await updateUserProfile(user.id, settingsForm);
+      setSettingsStatus(updated ? "Settings saved successfully." : "Failed to save settings.");
+    } catch {
+      setSettingsStatus("Failed to save settings.");
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   return (
@@ -659,6 +693,46 @@ export default function DashboardPage() {
               {/* ACTIVE WATCHLIST */}
               <CryptoWatchlist />
 
+            </div>
+          )}
+
+          {activeTab === "Settings" && (
+            <div className="scr-grid">
+              <div className="scr-panel scr-panel--welcome" style={{ gridColumn: '1 / -1' }}>
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <Settings size={16} /> <h2>USER SETTINGS</h2>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <p style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>Display Name</p>
+                    <input value={settingsForm.display_name} onChange={(e) => setSettingsForm((prev) => ({ ...prev, display_name: e.target.value }))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '6px', padding: '10px 12px', color: '#fff' }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>Photo URL</p>
+                    <input value={settingsForm.photo_url} onChange={(e) => setSettingsForm((prev) => ({ ...prev, photo_url: e.target.value }))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '6px', padding: '10px 12px', color: '#fff' }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>First Name</p>
+                    <input value={settingsForm.first_name} onChange={(e) => setSettingsForm((prev) => ({ ...prev, first_name: e.target.value }))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '6px', padding: '10px 12px', color: '#fff' }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>Last Name</p>
+                    <input value={settingsForm.last_name} onChange={(e) => setSettingsForm((prev) => ({ ...prev, last_name: e.target.value }))} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(210,180,94,0.3)', borderRadius: '6px', padding: '10px 12px', color: '#fff' }} />
+                  </div>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <input id="marketing_opt_in" type="checkbox" checked={settingsForm.marketing_opt_in} onChange={(e) => setSettingsForm((prev) => ({ ...prev, marketing_opt_in: e.target.checked }))} />
+                    <label htmlFor="marketing_opt_in" style={{ color: '#ccc', fontSize: '12px' }}>Receive product updates and marketing emails</label>
+                  </div>
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                    <button onClick={handleSaveSettings} disabled={isSavingSettings} style={{ background: '#d2b45e', border: 'none', color: '#000', borderRadius: '6px', padding: '10px 16px', cursor: 'pointer', fontWeight: 700 }}>
+                      {isSavingSettings ? 'Saving...' : 'Save Settings'}
+                    </button>
+                    {settingsStatus && <span style={{ color: '#d2b45e', fontSize: '12px' }}>{settingsStatus}</span>}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </section>

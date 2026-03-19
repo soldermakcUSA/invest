@@ -132,6 +132,30 @@ export async function fetchOrCreateUserProfile(user: {
  * Подписка на изменения профиля пользователя в реальном времени.
  * Возвращает функцию отписки.
  */
+export async function updateUserProfile(
+  uid: string,
+  updates: Partial<Pick<UserProfile, "display_name" | "first_name" | "last_name" | "photo_url" | "marketing_opt_in">>
+): Promise<UserProfile | null> {
+  const payload = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("users")
+    .update(payload)
+    .eq("uid", uid)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[UserProfile] Error updating settings:", error.message, error.details, error.hint);
+    return null;
+  }
+
+  return data as UserProfile;
+}
+
 export function subscribeToUserProfile(
   uid: string,
   onUpdate: (profile: Partial<UserProfile>) => void
