@@ -66,6 +66,26 @@ const candleSeries = [42, 60, 51, 78, 64, 55, 82, 71, 88, 76, 92, 96, 85, 90, 80
 const comparisonA = [18, 46, 63, 72, 81, 91, 100];
 const comparisonB = [11, 34, 54, 60, 71, 82, 90];
 
+const portfolioPerformance = [
+  { month: 'Jan', value: 118000 },
+  { month: 'Feb', value: 121500 },
+  { month: 'Mar', value: 124200 },
+  { month: 'Apr', value: 129800 },
+  { month: 'May', value: 133400 },
+  { month: 'Jun', value: 138900 },
+  { month: 'Jul', value: 142300 },
+  { month: 'Aug', value: 145892 },
+];
+
+const portfolioHoldings = [
+  { asset: 'NVIDIA', ticker: 'NVDA', type: 'Equity', allocation: '18%', value: '$26,260', pnl: '+12.4%' },
+  { asset: 'Bitcoin', ticker: 'BTC', type: 'Crypto', allocation: '16%', value: '$23,342', pnl: '+18.8%' },
+  { asset: 'Microsoft', ticker: 'MSFT', type: 'Equity', allocation: '13%', value: '$18,966', pnl: '+7.2%' },
+  { asset: 'Solana', ticker: 'SOL', type: 'Crypto', allocation: '9%', value: '$13,130', pnl: '+21.1%' },
+  { asset: 'Private AI Deal', ticker: 'AI-01', type: 'Venture', allocation: '8%', value: '$11,671', pnl: '+5.6%' },
+  { asset: 'Cash Reserve', ticker: 'USD', type: 'Cash', allocation: '7%', value: '$10,212', pnl: '+0.0%' },
+];
+
 function buildPolyline(values: number[], width: number, height: number) {
   const step = width / (values.length - 1);
   return values
@@ -693,6 +713,134 @@ export default function DashboardPage() {
               {/* ACTIVE WATCHLIST */}
               <CryptoWatchlist />
 
+            </div>
+          )}
+
+          {activeTab === "Portfolio View" && (
+            <div className="scr-grid">
+              <div className="scr-panel scr-panel--welcome" style={{ gridColumn: '1 / -1' }}>
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <Wallet size={16} /> <h2>PORTFOLIO VIEW</h2>
+                  </div>
+                  <div className="scr-panel-actions">
+                    <span className="scr-tag">LIVE</span>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '10px', textTransform: 'uppercase', margin: 0 }}>Net Asset Value</p>
+                    <h3 style={{ color: '#fff', fontSize: '24px', margin: '6px 0' }}>${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                    <p style={{ color: '#4ade80', fontSize: '12px', margin: 0 }}>+{yieldPercent.toFixed(2)}% total return</p>
+                  </div>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '10px', textTransform: 'uppercase', margin: 0 }}>Daily P&L</p>
+                    <h3 style={{ color: '#fff', fontSize: '24px', margin: '6px 0' }}>+${dailyChange.toLocaleString('en-US')}</h3>
+                    <p style={{ color: '#4ade80', fontSize: '12px', margin: 0 }}>Positive intraday momentum</p>
+                  </div>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '10px', textTransform: 'uppercase', margin: 0 }}>Active Holdings</p>
+                    <h3 style={{ color: '#fff', fontSize: '24px', margin: '6px 0' }}>{portfolioHoldings.length}</h3>
+                    <p style={{ color: '#ccc', fontSize: '12px', margin: 0 }}>Across public and private markets</p>
+                  </div>
+                  <div>
+                    <p style={{ color: '#888', fontSize: '10px', textTransform: 'uppercase', margin: 0 }}>Risk Profile</p>
+                    <h3 style={{ color: '#fff', fontSize: '24px', margin: '6px 0' }}>Balanced</h3>
+                    <p style={{ color: '#d2b45e', fontSize: '12px', margin: 0 }}>Diversified across multiple themes</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <Activity size={16} /> <h2>PERFORMANCE</h2>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ height: '300px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={portfolioPerformance}>
+                      <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis dataKey="month" stroke="#777" tickLine={false} axisLine={false} />
+                      <YAxis stroke="#777" tickLine={false} axisLine={false} width={70} />
+                      <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid rgba(210,180,94,0.3)', borderRadius: 8 }} />
+                      <Area type="monotone" dataKey="value" stroke="#d2b45e" fill="rgba(210,180,94,0.18)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="scr-panel">
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <Radar size={16} /> <h2>ALLOCATION</h2>
+                  </div>
+                </div>
+                <div className="scr-panel-body" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <div style={{ width: '180px', height: '180px', position: 'relative' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={allocation} innerRadius={45} outerRadius={75} dataKey="value" stroke="rgba(0,0,0,0.5)">
+                          {allocation.map((entry, index) => (
+                            <Cell key={`alloc-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px' }}>
+                    {allocation.map((item) => (
+                      <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: item.color, display: 'inline-block' }} />
+                          <span>{item.label}</span>
+                        </div>
+                        <span style={{ color: '#d2b45e' }}>{item.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="scr-panel" style={{ gridColumn: '1 / -1' }}>
+                <div className="scr-panel-header">
+                  <div className="scr-panel-title">
+                    <BriefcaseBusiness size={16} /> <h2>TOP HOLDINGS</h2>
+                  </div>
+                </div>
+                <div className="scr-panel-body">
+                  <table className="scr-table">
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>Asset</th>
+                        <th style={{ textAlign: 'left' }}>Type</th>
+                        <th style={{ textAlign: 'right' }}>Allocation</th>
+                        <th style={{ textAlign: 'right' }}>Value</th>
+                        <th style={{ textAlign: 'right' }}>P&amp;L</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {portfolioHoldings.map((holding: { asset: string; ticker: string; type: string; allocation: string; value: string; pnl: string }) => {
+                        const positive = holding.pnl.startsWith('+');
+                        return (
+                          <tr key={holding.ticker}>
+                            <td>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontWeight: 600, color: '#fff' }}>{holding.asset}</span>
+                                <span style={{ fontSize: '10px', color: '#777' }}>{holding.ticker}</span>
+                              </div>
+                            </td>
+                            <td>{holding.type}</td>
+                            <td style={{ textAlign: 'right' }}>{holding.allocation}</td>
+                            <td style={{ textAlign: 'right' }}>{holding.value}</td>
+                            <td style={{ textAlign: 'right', color: positive ? '#4ade80' : '#f87171' }}>{holding.pnl}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
