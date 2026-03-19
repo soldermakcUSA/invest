@@ -55,9 +55,9 @@ const allocation = [
   { label: "Technology", value: 35, color: "#d2b45e" },
   { label: "Crypto", value: 25, color: "#9ca3af" },
   { label: "Commodities", value: 15, color: "#b5842e" },
-  { label: "Bits", value: 15, color: "#6b7280" },
-  { label: "Cryptic", value: 15, color: "#71717a" },
-  { label: "Compuities", value: 15, color: "#52525b" },
+  { label: "Equities", value: 15, color: "#6b7280" },
+  { label: "Private Deals", value: 10, color: "#71717a" },
+  { label: "Cash", value: 10, color: "#52525b" },
   { label: "Others", value: 10, color: "#3f3f46" }
 ];
 
@@ -173,7 +173,7 @@ function CryptoWatchlist() {
               <th style={{ textAlign: 'right' }}>24h Vol</th>
               <th style={{ textAlign: 'center' }}>Sparkline</th>
               <th style={{ textAlign: 'right' }}>24h Chg</th>
-              <th style={{ textAlign: 'right' }}>Target</th>
+              <th style={{ textAlign: 'right' }}>Bias</th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +199,7 @@ function CryptoWatchlist() {
                     {isPositive ? '+' : ''}{crypto.change24h}%
                   </td>
                   <td style={{ textAlign: 'right', color: '#d2b45e', fontVariantNumeric: 'tabular-nums' }}>
-                    +5.00%
+                    {isPositive ? 'Bullish' : 'Cautious'}
                   </td>
                 </tr>
               );
@@ -576,7 +576,7 @@ export default function DashboardPage() {
                     <ShieldCheck size={16} /> <h2>RISK ALERTS <span className="cat">(SCAM DETECTOR)</span></h2>
                   </div>
                   <div className="scr-panel-actions">
-                    <span className="scr-tag">SCAM PTOR</span>
+                    <span className="scr-tag">RISK</span>
                     <button><MoreHorizontal size={14} /></button>
                   </div>
                 </div>
@@ -600,7 +600,7 @@ export default function DashboardPage() {
                         <em>projects</em>
                       </div>
                     </div>
-                    <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Project Stainers</h3>
+                    <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Risk Distribution</h3>
                     <div className="scr-risk-bars">
                       <div className="scr-risk-bar"><span style={{ width: '80%', background: '#f87171' }}></span><div className="scr-risk-bar-text"><span>Critical</span><span>27/23</span></div></div>
                       <div className="scr-risk-bar"><span style={{ width: '90%', background: '#eab308' }}></span><div className="scr-risk-bar-text"><span>High risk</span><span>58/55</span></div></div>
@@ -613,10 +613,10 @@ export default function DashboardPage() {
                       <h3 style={{ fontSize: '11px', color: '#ccc' }}>Risk Rating</h3>
                     </div>
                     <div className="scr-list">
-                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><Image src="/brand/team.jpeg" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>MetaVerse Scam? - High Risk</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>High-yield private fund review</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
+                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>Token presale liquidity audit</span> <span style={{ color: '#eab308' }}>Medium Risk</span></div>
+                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>Emerging venture due diligence</span> <span style={{ color: '#eab308' }}>Medium Risk</span></div>
+                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>Blue-chip equity strategy review</span> <span style={{ color: '#4ade80' }}>Low Risk</span></div>
                     </div>
                   </div>
                 </div>
@@ -635,10 +635,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
                   {[
-                    { t: 'New', d: 'Investments', p: 'New investment opportunities.', i: 'A' },
-                    { t: 'Crypto', d: 'Investments', p: 'Describe a shartroter of mwlorining.', i: 'B' },
-                    { t: 'Meta', d: 'Investments', p: 'Funding stage of aremodisen tech.', i: 'M' },
-                    { t: 'Ventures', d: 'Investments', p: 'New investment opportunities to amal.', i: 'V' },
+                    { t: 'AI Infrastructure', d: 'Private Markets', p: 'Early-stage exposure to applied AI infrastructure and data tooling.', i: 'A' },
+                    { t: 'Crypto Infrastructure', d: 'Digital Assets', p: 'Infrastructure-focused blockchain opportunities with utility-driven demand.', i: 'C' },
+                    { t: 'Market Intelligence', d: 'Research', p: 'Data products and analytics businesses serving capital markets.', i: 'M' },
+                    { t: 'Growth Ventures', d: 'Opportunities', p: 'Selective private opportunities aligned with long-term asymmetric upside.', i: 'V' },
                   ].map(v => (
                     <div key={v.t} className="scr-venture-card">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
