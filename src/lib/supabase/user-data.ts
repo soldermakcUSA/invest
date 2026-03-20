@@ -56,6 +56,21 @@ export type VentureRecord = {
   target_allocation_pct: number | null;
 };
 
+export type RiskScanRecord = {
+  id: string;
+  user_uid: string;
+  venture_id: string | null;
+  target_type: string;
+  target_name: string;
+  input_text: string | null;
+  risk_level: string | null;
+  primary_red_flag: string | null;
+  recommendation: string | null;
+  model: string | null;
+  raw_result: Record<string, unknown>;
+  created_at: string;
+};
+
 /**
  * Загружает профиль пользователя из таблицы users.
  * Если профиля нет — создаёт запись с дефолтными значениями.
@@ -223,6 +238,22 @@ export async function fetchVentures(uid: string): Promise<VentureRecord[]> {
   }
 
   return (data || []) as VentureRecord[];
+}
+
+export async function fetchRiskScans(uid: string): Promise<RiskScanRecord[]> {
+  const { data, error } = await supabase
+    .from("risk_scans")
+    .select("*")
+    .eq("user_uid", uid)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[RiskScans] Error loading scans:", error.message);
+    return [];
+  }
+
+  return (data || []) as RiskScanRecord[];
 }
 
 export async function updateUserProfile(

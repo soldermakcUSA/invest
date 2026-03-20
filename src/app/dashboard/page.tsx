@@ -86,6 +86,20 @@ const portfolioHoldings = [
   { asset: 'Cash Reserve', ticker: 'USD', type: 'Cash', allocation: '7%', value: '$10,212', pnl: '+0.0%' },
 ];
 
+const ventureCards = [
+  { t: 'AI Infrastructure', d: 'Private Markets', p: 'Early-stage exposure to applied AI infrastructure and compute-related businesses.', i: 'A' },
+  { t: 'Digital Assets', d: 'Crypto', p: 'Infrastructure and utility-driven blockchain projects with long-term network value.', i: 'D' },
+  { t: 'Market Data', d: 'Research', p: 'Products and data businesses serving traders, analysts, and asset allocators.', i: 'M' },
+  { t: 'Growth Capital', d: 'Opportunities', p: 'Selective private deals with asymmetric upside and strategic relevance.', i: 'G' },
+];
+
+const riskScanFallback = [
+  { target_name: 'High-yield private fund review', risk_level: 'High', recommendation: 'Review structure and counterparty risk.' },
+  { target_name: 'Token presale liquidity audit', risk_level: 'Medium', recommendation: 'Check lockups and treasury transparency.' },
+  { target_name: 'Emerging venture due diligence', risk_level: 'Medium', recommendation: 'Validate team and funding runway.' },
+  { target_name: 'Blue-chip equity strategy review', risk_level: 'Low', recommendation: 'Position remains within risk limits.' },
+];
+
 function formatPortfolioPerformance(snapshots: PortfolioSnapshot[]) {
   if (!snapshots.length) return portfolioPerformance;
   return snapshots.map((snapshot) => ({
@@ -282,6 +296,8 @@ export default function DashboardPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [livePortfolioHoldings, setLivePortfolioHoldings] = useState(portfolioHoldings);
   const [livePortfolioPerformance, setLivePortfolioPerformance] = useState(portfolioPerformance);
+  const [liveVentures, setLiveVentures] = useState(ventureCards);
+  const [liveRiskScans, setLiveRiskScans] = useState(riskScanFallback);
 
   const { user, profile, signOut } = useAuth();
 
@@ -706,10 +722,14 @@ export default function DashboardPage() {
                       <h3 style={{ fontSize: '11px', color: '#ccc' }}>Risk Rating</h3>
                     </div>
                     <div className="scr-list">
-                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>High-yield private fund review</span> <span style={{ color: '#f87171' }}>High Risk</span></div>
-                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>Token presale liquidity audit</span> <span style={{ color: '#eab308' }}>Medium Risk</span></div>
-                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>Emerging venture due diligence</span> <span style={{ color: '#eab308' }}>Medium Risk</span></div>
-                      <div className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>Blue-chip equity strategy review</span> <span style={{ color: '#4ade80' }}>Low Risk</span></div>
+                      {liveRiskScans.map((scan: { target_name: string; risk_level: string; recommendation: string }) => {
+                        const level = String(scan.risk_level || 'Unknown').toLowerCase();
+                        const color = level === 'high' ? '#f87171' : level === 'medium' ? '#eab308' : '#4ade80';
+                        const label = level ? level.charAt(0).toUpperCase() + level.slice(1) : 'Unknown';
+                        return (
+                          <div key={scan.target_name} className="scr-list-item"><Image src="/logo-pr.png" width={16} height={16} alt="Project icon" /> <span style={{ flex: 1 }}>{scan.target_name}</span> <span style={{ color }}>{label} Risk</span></div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -962,12 +982,7 @@ export default function DashboardPage() {
               <div className="scr-panel" style={{ gridColumn: '1 / -1' }}>
                 <div className="scr-panel-header"><div className="scr-panel-title"><Rocket size={16} /> <h2>VENTURES</h2></div></div>
                 <div className="scr-panel-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
-                  {[
-                    { t: 'AI Infrastructure', d: 'Private Markets', p: 'Early-stage exposure to applied AI infrastructure and compute-related businesses.', i: 'A' },
-                    { t: 'Digital Assets', d: 'Crypto', p: 'Infrastructure and utility-driven blockchain projects with long-term network value.', i: 'D' },
-                    { t: 'Market Data', d: 'Research', p: 'Products and data businesses serving traders, analysts, and asset allocators.', i: 'M' },
-                    { t: 'Growth Capital', d: 'Opportunities', p: 'Selective private deals with asymmetric upside and strategic relevance.', i: 'G' },
-                  ].map((v) => (
+                  {liveVentures.map((v: { t: string; d: string; p: string; i: string }) => (
                     <div key={v.t} className="scr-venture-card">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                         <div style={{ width: '28px', height: '28px', background: 'rgba(210,180,94,0.1)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d2b45e', fontWeight: 'bold', fontSize: '14px', border: '1px solid rgba(210,180,94,0.3)' }}>{v.i}</div>
