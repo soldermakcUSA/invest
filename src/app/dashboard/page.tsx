@@ -7,7 +7,7 @@ import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
 import { useAuth } from "@/components/auth-provider";
-import { updateUserProfile } from "@/lib/supabase/user-data";
+import { fetchPortfolioBundle, updateUserProfile, type PortfolioPosition, type PortfolioSnapshot } from "@/lib/supabase/user-data";
 import {
   Bell,
   Bot,
@@ -85,6 +85,26 @@ const portfolioHoldings = [
   { asset: 'Private AI Deal', ticker: 'AI-01', type: 'Venture', allocation: '8%', value: '$11,671', pnl: '+5.6%' },
   { asset: 'Cash Reserve', ticker: 'USD', type: 'Cash', allocation: '7%', value: '$10,212', pnl: '+0.0%' },
 ];
+
+function formatPortfolioPerformance(snapshots: PortfolioSnapshot[]) {
+  if (!snapshots.length) return portfolioPerformance;
+  return snapshots.map((snapshot) => ({
+    month: new Date(snapshot.snapshot_date).toLocaleDateString('en-US', { month: 'short' }),
+    value: snapshot.nav,
+  }));
+}
+
+function formatPortfolioHoldings(positions: PortfolioPosition[]) {
+  if (!positions.length) return portfolioHoldings;
+  return positions.map((position) => ({
+    asset: position.asset_name,
+    ticker: position.ticker,
+    type: position.asset_type.charAt(0).toUpperCase() + position.asset_type.slice(1),
+    allocation: `${Number(position.allocation_pct || 0).toFixed(0)}%`,
+    value: `$${Number(position.market_value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+    pnl: `${Number(position.pnl_pct || 0) >= 0 ? '+' : ''}${Number(position.pnl_pct || 0).toFixed(1)}%`,
+  }));
+}
 
 function buildPolyline(values: number[], width: number, height: number) {
   const step = width / (values.length - 1);
@@ -260,6 +280,8 @@ export default function DashboardPage() {
   });
   const [settingsStatus, setSettingsStatus] = useState<string | null>(null);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [livePortfolioHoldings, setLivePortfolioHoldings] = useState(portfolioHoldings);
+  const [livePortfolioPerformance, setLivePortfolioPerformance] = useState(portfolioPerformance);
 
   const { user, profile, signOut } = useAuth();
 
@@ -287,6 +309,23 @@ export default function DashboardPage() {
       document.body.classList.remove('theme-light');
     }
   }, [theme]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadPortfolio() {
+      if (!user) return;
+      const data = await fetchPortfolioBundle(user.id);
+      if (!data || ignore) return;
+      setLivePortfolioHoldings(formatPortfolioHoldings(data.positions));
+      setLivePortfolioPerformance(formatPortfolioPerformance(data.snapshots));
+    }
+
+    loadPortfolio();
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     setSettingsForm({
@@ -740,7 +779,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p style={{ color: '#888', fontSize: '10px', textTransform: 'uppercase', margin: 0 }}>Active Holdings</p>
-                    <h3 style={{ color: '#fff', fontSize: '24px', margin: '6px 0' }}>{portfolioHoldings.length}</h3>
+                    <h3 style={{ color: '#fff', fontSize: '24px', margin: '6px 0' }}>{livePortfolioHoldings.length}</h3>
                     <p style={{ color: '#ccc', fontSize: '12px', margin: 0 }}>Across public and private markets</p>
                   </div>
                   <div>

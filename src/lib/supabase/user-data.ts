@@ -19,6 +19,31 @@ export type UserProfile = {
   last_sign_in_at: string;
 };
 
+export type PortfolioPosition = {
+  id: string;
+  portfolio_id: string;
+  asset_name: string;
+  ticker: string;
+  asset_type: string;
+  quantity: number;
+  avg_cost: number;
+  current_price: number;
+  market_value: number;
+  allocation_pct: number;
+  pnl_pct: number;
+  status: string;
+};
+
+export type PortfolioSnapshot = {
+  id: string;
+  portfolio_id: string;
+  snapshot_date: string;
+  nav: number;
+  daily_change: number;
+  daily_change_pct: number;
+  total_return_pct: number;
+};
+
 /**
  * Загружает профиль пользователя из таблицы users.
  * Если профиля нет — создаёт запись с дефолтными значениями.
@@ -132,6 +157,47 @@ export async function fetchOrCreateUserProfile(user: {
  * Подписка на изменения профиля пользователя в реальном времени.
  * Возвращает функцию отписки.
  */
+export async function fetchPortfolioBundle(uid: string): Promise<{
+  positions: PortfolioPosition[];
+  snapshots: PortfolioSnapshot[];
+} | null> {
+  const { data: portfolio } = await supabase
+    .from("portfolios")
+    .select("id")
+    .eq("user_uid", uid)
+    .eq("is_default", true)
+    .maybeSingle();
+
+  if (!portfolio?.id) {
+    return { positions: [], snapshots: [] };
+  }
+
+  const [{ data: positions, error: positionsError }, { data: snapshots, error: snapshotsError }] = await Promise.all([
+    supabase
+      .from("portfolio_positions")
+      .select("*")
+      .eq("portfolio_id", portfolio.id)
+      .order("market_value", { ascending: false }),
+    supabase
+      .from("portfolio_snapshots")
+      .select("*")
+      .eq("portfolio_id", portfolio.id)
+      .order("snapshot_date", { ascending: true }),
+  ]);
+
+  if (positionsError) {
+    console.error("[Portfolio] Error loading positions:", positionsError.message);
+  }
+  if (snapshotsError) {
+    console.error("[Portfolio] Error loading snapshots:", snapshotsError.message);
+  }
+
+  return {
+    positions: (positions || []) as PortfolioPosition[],
+    snapshots: (snapshots || []) as PortfolioSnapshot[],
+  };
+}
+
 export async function updateUserProfile(
   uid: string,
   updates: Partial<Pick<UserProfile, "display_name" | "first_name" | "last_name" | "photo_url" | "marketing_opt_in">>
