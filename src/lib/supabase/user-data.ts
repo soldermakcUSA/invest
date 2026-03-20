@@ -71,6 +71,24 @@ export type RiskScanRecord = {
   created_at: string;
 };
 
+export type AIThreadRecord = {
+  id: string;
+  user_uid: string;
+  tool: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AIMessageRecord = {
+  id: string;
+  thread_id: string;
+  role: string;
+  content: string;
+  meta: Record<string, unknown>;
+  created_at: string;
+};
+
 /**
  * Загружает профиль пользователя из таблицы users.
  * Если профиля нет — создаёт запись с дефолтными значениями.
@@ -254,6 +272,49 @@ export async function fetchRiskScans(uid: string): Promise<RiskScanRecord[]> {
   }
 
   return (data || []) as RiskScanRecord[];
+}
+
+export async function fetchAIActivity(uid: string): Promise<Array<{ title: string; preview: string; tool: string }>> {
+  const { data: threads, error: threadsError } = await supabase
+    .from("ai_threads")
+    .select("id, tool, title, created_at, updated_at")
+    .eq("user_uid", uid)
+    .order("updated_at", { ascending: false })
+    .limit(4);
+
+  if (threadsError) {
+    console.error("[AI] Error loading threads:", threadsError.message);
+    return [];
+  }
+
+  const typedThreads = (threads || []) as AIThreadRecord[];
+  if (!typedThreads.length) return [];
+
+  const threadIds = typedThreads.map((t) => t.id);
+  const { data: messages, error: messagesError } = await supabase
+    .from("ai_messages")
+    .select("thread_id, role, content, created_at")
+    .in("thread_id", threadIds)
+    .order("created_at", { ascending: false });
+
+  if (messagesError) {
+    console.error("[AI] Error loading messages:", messagesError.message);
+    return typedThreads.map((thread) => ({
+      title: thread.title || thread.tool,
+      preview: "Recent AI thread activity available.",
+      tool: thread.tool,
+    }));
+  }
+
+  const typedMessages = (messages || []) as AIMessageRecord[];
+  return typedThreads.map((thread) => {
+    const lastAssistantMessage = typedMessages.find((m) => m.thread_id === thread.id && m.role === "assistant");
+    return {
+      title: thread.title || thread.tool,
+      preview: (lastAssistantMessage?.content || "Recent AI thread activity available.").slice(0, 120),
+      tool: thread.tool,
+    };
+  });
 }
 
 export async function updateUserProfile(

@@ -7,7 +7,7 @@ import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
 import { useAuth } from "@/components/auth-provider";
-import { fetchPortfolioBundle, fetchVentures, updateUserProfile, type PortfolioPosition, type PortfolioSnapshot, type VentureRecord } from "@/lib/supabase/user-data";
+import { fetchPortfolioBundle, fetchVentures, fetchRiskScans, fetchAIActivity, updateUserProfile, type PortfolioPosition, type PortfolioSnapshot, type VentureRecord } from "@/lib/supabase/user-data";
 import {
   Bell,
   Bot,
@@ -99,6 +99,31 @@ const riskScanFallback = [
   { target_name: 'Emerging venture due diligence', risk_level: 'Medium', recommendation: 'Validate team and funding runway.' },
   { target_name: 'Blue-chip equity strategy review', risk_level: 'Low', recommendation: 'Position remains within risk limits.' },
 ];
+
+const aiActivityFallback = [
+  { title: 'Macro Outlook', preview: 'AI macro summary will appear here once saved to Supabase.', tool: 'analyst' },
+  { title: 'Crypto View', preview: 'Recent crypto-focused analyst responses will be shown here.', tool: 'analyst' },
+  { title: 'Risk Review', preview: 'Saved risk-oriented AI analysis will populate this panel.', tool: 'risk' },
+];
+
+function formatVentures(ventures: VentureRecord[]) {
+  if (!ventures.length) return ventureCards;
+  return ventures.map((venture) => ({
+    t: venture.name,
+    d: venture.category || venture.stage || 'Venture',
+    p: venture.thesis || venture.summary || 'Opportunity under review.',
+    i: (venture.name || 'V').slice(0, 1).toUpperCase(),
+  }));
+}
+
+function formatRiskScans(scans: Array<{ target_name: string; risk_level: string | null; recommendation: string | null; primary_red_flag?: string | null }>) {
+  if (!scans.length) return riskScanFallback;
+  return scans.map((scan) => ({
+    target_name: scan.target_name,
+    risk_level: scan.risk_level || 'Unknown',
+    recommendation: scan.recommendation || scan.primary_red_flag || 'Review required.',
+  }));
+}
 
 function formatPortfolioPerformance(snapshots: PortfolioSnapshot[]) {
   if (!snapshots.length) return portfolioPerformance;
@@ -298,6 +323,7 @@ export default function DashboardPage() {
   const [livePortfolioPerformance, setLivePortfolioPerformance] = useState(portfolioPerformance);
   const [liveVentures, setLiveVentures] = useState(ventureCards);
   const [liveRiskScans, setLiveRiskScans] = useState(riskScanFallback);
+  const [liveAIActivity, setLiveAIActivity] = useState(aiActivityFallback);
 
   const { user, profile, signOut } = useAuth();
 
@@ -331,10 +357,21 @@ export default function DashboardPage() {
 
     async function loadPortfolio() {
       if (!user) return;
-      const data = await fetchPortfolioBundle(user.id);
-      if (!data || ignore) return;
-      setLivePortfolioHoldings(formatPortfolioHoldings(data.positions));
-      setLivePortfolioPerformance(formatPortfolioPerformance(data.snapshots));
+      const [portfolioData, venturesData, riskScansData, aiActivityData] = await Promise.all([
+        fetchPortfolioBundle(user.id),
+        fetchVentures(user.id),
+        fetchRiskScans(user.id),
+        fetchAIActivity(user.id),
+      ]);
+
+      if (ignore) return;
+      if (portfolioData) {
+        setLivePortfolioHoldings(formatPortfolioHoldings(portfolioData.positions));
+        setLivePortfolioPerformance(formatPortfolioPerformance(portfolioData.snapshots));
+      }
+      setLiveVentures(formatVentures(venturesData));
+      setLiveRiskScans(formatRiskScans(riskScansData));
+      setLiveAIActivity(aiActivityData.length ? aiActivityData : aiActivityFallback);
     }
 
     loadPortfolio();
@@ -934,10 +971,16 @@ export default function DashboardPage() {
                   <div>
                     <p style={{ color: '#888', fontSize: '11px', marginBottom: '8px' }}>Tool Stack</p>
                     <div className="scr-list">
-                      <div className="scr-list-item"><Bot size={14} /> <span style={{ flex: 1 }}>Market Analyst</span><span style={{ color: '#4ade80' }}>Active</span></div>
-                      <div className="scr-list-item"><ShieldAlert size={14} /> <span style={{ flex: 1 }}>Scam Detector</span><span style={{ color: '#4ade80' }}>Active</span></div>
-                      <div className="scr-list-item"><Sparkles size={14} /> <span style={{ flex: 1 }}>Idea Generator</span><span style={{ color: '#d2b45e' }}>Ready</span></div>
-                      <div className="scr-list-item"><Gauge size={14} /> <span style={{ flex: 1 }}>Signal Engine</span><span style={{ color: '#d2b45e' }}>Preview</span></div>
+                      {liveAIActivity.map((item: { title: string; preview: string; tool: string }) => (
+                        <div key={item.title} className="scr-list-item" style={{ alignItems: 'flex-start' }}>
+                          <Bot size={14} style={{ marginTop: '2px' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: '#fff', fontSize: '11px', marginBottom: '2px' }}>{item.title}</div>
+                            <div style={{ color: '#777', fontSize: '10px', lineHeight: 1.4 }}>{item.preview}</div>
+                          </div>
+                          <span style={{ color: '#d2b45e', fontSize: '10px', textTransform: 'uppercase' }}>{item.tool}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
