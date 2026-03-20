@@ -44,6 +44,18 @@ export type PortfolioSnapshot = {
   total_return_pct: number;
 };
 
+export type VentureRecord = {
+  id: string;
+  user_uid: string;
+  name: string;
+  category: string | null;
+  stage: string | null;
+  summary: string | null;
+  thesis: string | null;
+  status: string;
+  target_allocation_pct: number | null;
+};
+
 /**
  * Загружает профиль пользователя из таблицы users.
  * Если профиля нет — создаёт запись с дефолтными значениями.
@@ -196,6 +208,21 @@ export async function fetchPortfolioBundle(uid: string): Promise<{
     positions: (positions || []) as PortfolioPosition[],
     snapshots: (snapshots || []) as PortfolioSnapshot[],
   };
+}
+
+export async function fetchVentures(uid: string): Promise<VentureRecord[]> {
+  const { data, error } = await supabase
+    .from("ventures")
+    .select("*")
+    .eq("user_uid", uid)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[Ventures] Error loading ventures:", error.message);
+    return [];
+  }
+
+  return (data || []) as VentureRecord[];
 }
 
 export async function updateUserProfile(

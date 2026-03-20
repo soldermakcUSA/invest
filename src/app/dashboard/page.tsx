@@ -7,7 +7,7 @@ import { OrbitalBrand } from "@/components/orbital-brand";
 import { useState, useEffect } from "react";
 import { fetchGemini } from "@/lib/gemini";
 import { useAuth } from "@/components/auth-provider";
-import { fetchPortfolioBundle, updateUserProfile, type PortfolioPosition, type PortfolioSnapshot } from "@/lib/supabase/user-data";
+import { fetchPortfolioBundle, fetchVentures, updateUserProfile, type PortfolioPosition, type PortfolioSnapshot, type VentureRecord } from "@/lib/supabase/user-data";
 import {
   Bell,
   Bot,
