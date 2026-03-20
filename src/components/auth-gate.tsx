@@ -22,7 +22,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         <section className="auth-shell">
           <div className="auth-card">
             <p className="auth-message">
-              Add Firebase client keys to <code>.env.local</code> before opening the private dashboard.
+              Add your Supabase client keys to <code>.env.local</code> before opening the private dashboard.
             </p>
           </div>
         </section>

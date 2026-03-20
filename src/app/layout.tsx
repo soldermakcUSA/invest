@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "AlphaForge Portal",
   description:
-    "Premium investment intelligence portal built with Next.js and Firebase Auth for AI research, portfolio oversight and venture screening.",
+    "Premium investment intelligence portal built with Next.js and Supabase for AI research, portfolio oversight and venture screening.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
