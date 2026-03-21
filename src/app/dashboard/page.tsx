@@ -699,7 +699,7 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '16px', color: '#ccc' }}>
                       <div>
-                        <p>Algorithm Perf...</p>
+                        <p>Algorithm Perf.</p>
                         <p style={{ color: '#d2b45e', fontWeight: 'bold' }}>54.5%</p>
                       </div>
                       <div>
@@ -748,9 +748,18 @@ export default function DashboardPage() {
                     </div>
                     <h3 style={{ fontSize: '11px', color: '#ccc', marginBottom: '8px' }}>Risk Distribution</h3>
                     <div className="scr-risk-bars">
-                      <div className="scr-risk-bar"><span style={{ width: '80%', background: '#f87171' }}></span><div className="scr-risk-bar-text"><span>Critical</span><span>27/23</span></div></div>
-                      <div className="scr-risk-bar"><span style={{ width: '90%', background: '#eab308' }}></span><div className="scr-risk-bar-text"><span>High risk</span><span>58/55</span></div></div>
-                      <div className="scr-risk-bar"><span style={{ width: '15%', background: '#4ade80' }}></span><div className="scr-risk-bar-text"><span>Low risk</span><span>1/34</span></div></div>
+                      <div className="scr-risk-bar-row">
+                        <div className="scr-risk-bar-text"><span>Critical</span><span>27/23</span></div>
+                        <div className="scr-risk-bar"><span style={{ width: '80%', background: '#f87171' }}></span></div>
+                      </div>
+                      <div className="scr-risk-bar-row">
+                        <div className="scr-risk-bar-text"><span>High risk</span><span>58/55</span></div>
+                        <div className="scr-risk-bar"><span style={{ width: '90%', background: '#eab308' }}></span></div>
+                      </div>
+                      <div className="scr-risk-bar-row">
+                        <div className="scr-risk-bar-text"><span>Low risk</span><span>1/34</span></div>
+                        <div className="scr-risk-bar"><span style={{ width: '15%', background: '#4ade80' }}></span></div>
+                      </div>
                     </div>
                   </div>
                   <div style={{ flex: 1.2 }}>
